@@ -1,5 +1,7 @@
 # Seed Esportes - Termo de Autorização
 
+[![Netlify Deploy](https://img.shields.io/badge/Netlify-Deploy-blue)](https://institutoseed.netlify.app)
+
 Web app React onde pais/responsáveis assinam termo de autorização para atividade física e cessão de direitos de imagem para o centro de treinamento Seed Esportes.
 
 ## Funcionalidades
