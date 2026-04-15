@@ -111,7 +111,7 @@ export default function InscricaoPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const centerX = pageWidth / 2;
-    const primaryColor = [139, 92, 246]; // Roxo #8b5cf6
+    const primaryColor: [number, number, number] = [139, 92, 246]; // Roxo #8b5cf6
 
     // Divisor roxo no topo
     pdf.setDrawColor(...primaryColor);
