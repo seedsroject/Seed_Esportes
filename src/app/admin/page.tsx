@@ -145,17 +145,17 @@ export default function AdminPage() {
 
   const filteredAlunos = alunos.filter(
     (a) =>
-      a.nome_aluno.toLowerCase().includes(search.toLowerCase()) ||
-      a.nome_responsavel.toLowerCase().includes(search.toLowerCase()) ||
-      a.codigo.toLowerCase().includes(search.toLowerCase())
+      (a.nome_aluno || '').toLowerCase().includes(search.toLowerCase()) ||
+      (a.nome_responsavel || '').toLowerCase().includes(search.toLowerCase()) ||
+      (a.codigo || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
-  const countPendentes = alunos.filter(a => !a.nome_aluno).length;
-  const countCompletos = alunos.filter(a => a.nome_aluno).length;
+  const countPendentes = alunos.filter(a => !a.nome_aluno || a.nome_aluno === null).length;
+  const countCompletos = alunos.filter(a => !!a.nome_aluno && a.nome_aluno !== null).length;
 
   if (verificando) {
     return (
@@ -331,7 +331,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {aluno.nome_aluno ? (
+                {aluno.nome_aluno && aluno.nome_aluno !== null ? (
                   <>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-gray-600">
