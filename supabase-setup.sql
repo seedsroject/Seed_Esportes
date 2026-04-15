@@ -1,7 +1,7 @@
 -- seed-termos/supabase-setup.sql
 -- Execute este SQL no SQL Editor do Supabase
 
--- 1. Recriar tabela alunos com id_inscricao automático
+-- 1. Recriar tabela alunos com id_inscricao e documentos
 DROP TABLE IF EXISTS public.alunos CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.alunos (
@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.alunos (
     local TEXT,
     assinatura TEXT,
     pdf_url TEXT,
+    documentos_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

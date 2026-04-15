@@ -4,13 +4,14 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import SignatureCanvas from 'react-signature-canvas';
 import { jsPDF } from 'jspdf';
-import { FileText, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { FileText, Check, AlertCircle, Loader2, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const INSTITUICAO = {
   razaoSocial: 'Instituto Seed Esportes',
   nomeFantasia: 'Seed Esportes',
   cnpj: '64.013.507/0001-62',
+  endereco: 'Nova Iguaçu - RJ',
 };
 
 interface FormData {
@@ -22,6 +23,7 @@ interface FormData {
   telefone: string;
   local: string;
   assinatura: string;
+  documentos: File | null;
 }
 
 const initialFormData: FormData = {
@@ -31,25 +33,77 @@ const initialFormData: FormData = {
   nomeResponsavel: '',
   cpfResponsavel: '',
   telefone: '',
-  local: '',
+  local: INSTITUICAO.endereco,
   assinatura: '',
+  documentos: null,
 };
 
 export default function InscricaoPage() {
   const router = useRouter();
   const sigCanvas = useRef<SignatureCanvas>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [maiorIdade, setMaiorIdade] = useState(false);
+  const [docNome, setDocNome] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    
+    if (name === 'maiorIdade') {
+      setMaiorIdade(checked);
+      if (checked) {
+        setFormData({ 
+          ...formData, 
+          telefone: formData.telefone,
+          local: INSTITUICAO.endereco,
+          documentos: formData.documentos
+        });
+      } else {
+        setFormData({ 
+          ...formData, 
+          telefone: '',
+          local: INSTITUICAO.endereco,
+          documentos: null 
+        });
+        setDocNome('');
+      }
+      return;
+    }
+    
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        setErro('Apenas arquivos PDF são permitidos');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setErro('O arquivo deve ter no máximo 5MB');
+        return;
+      }
+      setFormData({ ...formData, documentos: file });
+      setDocNome(file.name);
+      setErro('');
+    }
   };
 
   const clearSignature = () => {
     sigCanvas.current?.clear();
     setFormData({ ...formData, assinatura: '' });
+  };
+
+  const handleRemoveFile = () => {
+    setFormData({ ...formData, documentos: null });
+    setDocNome('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const generatePDF = async () => {
@@ -59,7 +113,7 @@ export default function InscricaoPage() {
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Termo de Autorização para Atividade Física e', pageWidth / 2, 20, { align: 'center' });
-    pdf.text('Cessão de Direitos de Imagem, Vídeo e Áudio', pageWidth / 2, 28, { align: 'center' });
+    pdf.text('Cessão de Direitos de Imagem, Vídeo eÁudio', pageWidth / 2, 28, { align: 'center' });
 
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
@@ -69,41 +123,52 @@ export default function InscricaoPage() {
     pdf.text(`Nome Fantasia: ${INSTITUICAO.nomeFantasia}`, 15, 59);
     pdf.text(`CNPJ: ${INSTITUICAO.cnpj}`, 15, 66);
 
+    const tipoInscricao = maiorIdade ? 'MAIOR DE IDADE' : 'MENOR DE IDADE';
     pdf.setFont('helvetica', 'bold');
-    pdf.text('1. Dados do Aluno(a) e Responsável', 15, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`Nome do Aluno(a): ${formData.nomeAluno}`, 15, 90);
-    pdf.text(`Data de Nascimento: ${formData.dataNascimento}`, 15, 100);
-    pdf.text(`RG/CPF: ${formData.rgCpf}`, 15, 110);
-    pdf.text(`Nome do Responsável: ${formData.nomeResponsavel}`, 15, 120);
-    pdf.text(`CPF do Responsável: ${formData.cpfResponsavel}`, 15, 130);
-    pdf.text(`Telefone: ${formData.telefone}`, 15, 140);
+    pdf.text(`Tipo de Inscrição: ${tipoInscricao}`, 15, 75);
 
     pdf.setFont('helvetica', 'bold');
-    pdf.text('2. Autorização para Prática de Atividade Física', 15, 155);
+    pdf.text('1. Dados do Aluno(a)', 15, 85);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('AUTORIZO a participação do aluno nas atividades físicas, esportivas e', 15, 165);
-    pdf.text('recreativas promovidas pelo Instituto Seed Esportes.', 15, 172);
-    pdf.text('Declaro que o aluno goza de plena saúde física e mental.', 15, 185);
+    pdf.text(`Nome do Aluno(a): ${formData.nomeAluno}`, 15, 95);
+    pdf.text(`Data de Nascimento: ${formData.dataNascimento}`, 15, 105);
+    pdf.text(`RG/CPF: ${formData.rgCpf}`, 15, 115);
+    pdf.text(`Telefone: ${formData.telefone || 'Não informado'}`, 15, 125);
 
+    if (!maiorIdade) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('2. Dados do Responsável', 15, 140);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Nome do Responsável: ${formData.nomeResponsavel}`, 15, 150);
+      pdf.text(`CPF do Responsável: ${formData.cpfResponsavel}`, 15, 160);
+    }
+
+    const autorizacaoY = maiorIdade ? 140 : 175;
     pdf.setFont('helvetica', 'bold');
-    pdf.text('3. Autorização de Uso de Imagem, Vídeo e Áudio', 15, 200);
+    pdf.text(maiorIdade ? '2. Autorização para Prática de Atividade Física' : '3. Autorização para Prática de Atividade Física', 15, autorizacaoY);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e', 15, 210);
-    pdf.text('depoimentos do aluno(a) captados durante as atividades para:', 15, 217);
-    pdf.text('- Divulgação Institucional: Redes sociais, sites e newsletters', 15, 227);
-    pdf.text('- Materiais Publicitários: Folders, banners, vídeos promocionais', 15, 234);
-    pdf.text('- Registros Históricos: Arquivo interno e relatórios', 15, 241);
-    pdf.text('Esta autorização é gratuita, irrevocable e permanente.', 15, 255);
+    pdf.text('AUTORIZO a participação do aluno nas atividades físicas, esportivas e', 15, autorizacaoY + 10);
+    pdf.text('recreativas promovidas pelo Instituto Seed Esportes.', 15, autorizacaoY + 17);
+    pdf.text('Declaro que o aluno goza de plena saúde física e mental.', 15, autorizacaoY + 30);
+
+    const imagemY = maiorIdade ? 175 : 210;
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(maiorIdade ? '3. Autorização de Uso de Imagem' : '4. Autorização de Uso de Imagem', 15, imagemY);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e', 15, imagemY + 10);
+    pdf.text('depoimentos do aluno(a) captados durante as atividades para:', 15, imagemY + 17);
+    pdf.text('- Divulgação Institucional: Redes sociais, sites e newsletters', 15, imagemY + 27);
+    pdf.text('- Materiais Publicitários: Folders, banners, vídeos promocionais', 15, imagemY + 34);
+    pdf.text('- Registros Históricos: Arquivo interno e relatórios', 15, imagemY + 41);
+    pdf.text('Esta autorização é gratuita, irrevocable e permanente.', 15, imagemY + 55);
 
     if (formData.assinatura) {
-      const imgData = formData.assinatura;
-      pdf.addImage(imgData, 'PNG', 15, 270, 60, 25);
+      pdf.addImage(formData.assinatura, 'PNG', 15, imagemY + 70, 60, 25);
     }
 
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`Local: ${formData.local}`, 15, 305);
-    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 100, 305);
+    pdf.text(`Local: ${formData.local}`, 15, imagemY + 105);
+    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 100, imagemY + 105);
 
     return pdf;
   };
@@ -112,20 +177,49 @@ export default function InscricaoPage() {
     e.preventDefault();
     setErro('');
 
+    if (!formData.nomeAluno) {
+      setErro('Preencha o nome do aluno');
+      return;
+    }
+
+    if (!maiorIdade && (!formData.nomeResponsavel || !formData.cpfResponsavel)) {
+      setErro('Preencha os dados do responsável');
+      return;
+    }
+
+    if (maiorIdade && !formData.telefone) {
+      setErro('Preencha o telefone');
+      return;
+    }
+
+    if (maiorIdade && !formData.documentos) {
+      setErro('Envie o documento (RG ou CPF) em PDF');
+      return;
+    }
+
     if (!sigCanvas.current?.isEmpty()) {
       setFormData({ ...formData, assinatura: sigCanvas.current?.toDataURL() || '' });
     }
 
-    if (!formData.nomeAluno || !formData.nomeResponsavel) {
-      setErro('Preencha os campos obrigatórios');
-      return;
-    }
-
     setLoading(true);
     try {
+      let documentosUrl = null;
+
+      if (formData.documentos) {
+        const docName = `doc_${formData.nomeAluno.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('termos')
+          .upload(docName, formData.documentos, { contentType: 'application/pdf' });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from('termos').getPublicUrl(uploadData.path);
+        documentosUrl = urlData.publicUrl;
+      }
+
       const pdf = await generatePDF();
       const pdfBlob = pdf.output('blob');
-      const pdfName = `termo_${Date.now()}.pdf`;
+      const pdfName = `termo_${formData.nomeAluno.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('termos')
@@ -135,17 +229,25 @@ export default function InscricaoPage() {
 
       const { data: urlData } = supabase.storage.from('termos').getPublicUrl(uploadData.path);
 
-      const { error: insertError } = await supabase.from('alunos').insert({
+      const dadosInserir = {
         nome_aluno: formData.nomeAluno,
         data_nascimento: formData.dataNascimento || null,
         rg_cpf: formData.rgCpf || null,
-        nome_responsavel: formData.nomeResponsavel,
-        cpf_responsavel: formData.cpfResponsavel || null,
         telefone: formData.telefone || null,
-        local: formData.local || null,
+        local: formData.local,
         assinatura: formData.assinatura || null,
         pdf_url: urlData.publicUrl,
-      });
+        documentos_url: documentosUrl,
+      };
+
+      if (!maiorIdade) {
+        Object.assign(dadosInserir, {
+          nome_responsavel: formData.nomeResponsavel,
+          cpf_responsavel: formData.cpfResponsavel || null,
+        });
+      }
+
+      const { error: insertError } = await supabase.from('alunos').insert(dadosInserir);
 
       if (insertError) throw insertError;
 
@@ -167,7 +269,11 @@ export default function InscricaoPage() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Inscrição Realizada!</h1>
           <p className="text-gray-600 mb-6">O termo de autorização foi assinado com sucesso.</p>
-          <p className="text-sm text-gray-500">O responsável receberá a confirmação.</p>
+          <p className="text-sm text-gray-500">
+            {maiorIdade 
+              ? 'Você receberá a confirmação por email.' 
+              : 'O responsável receberá a confirmação.'}
+          </p>
         </div>
       </div>
     );
@@ -213,10 +319,31 @@ export default function InscricaoPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">1. Dados do Aluno(a) e Responsável</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="checkbox"
+                id="maiorIdade"
+                name="maiorIdade"
+                checked={maiorIdade}
+                onChange={handleChange}
+                className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="maiorIdade" className="text-lg font-semibold text-gray-900">
+                Sou maior de 18 anos
+              </label>
+            </div>
+            <p className="text-sm text-gray-500">
+              {maiorIdade 
+                ? 'Você irá preencher seus próprios dados e enviar documentos.' 
+                : 'Um responsável legal precisa assinar o termo.'}
+            </p>
+          </div>
+
+          <div className="card">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">1. Dados do Aluno(a)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="input-label">Nome do Aluno(a) *</label>
+                <label className="input-label">Nome Completo *</label>
                 <input
                   type="text"
                   name="nomeAluno"
@@ -237,7 +364,7 @@ export default function InscricaoPage() {
                 />
               </div>
               <div>
-                <label className="input-label">RG/CPF</label>
+                <label className="input-label">RG ou CPF</label>
                 <input
                   type="text"
                   name="rgCpf"
@@ -247,47 +374,94 @@ export default function InscricaoPage() {
                   placeholder="123.456.789-00"
                 />
               </div>
-              <div className="md:col-span-2">
-                <label className="input-label">Nome do Responsável Legal *</label>
-                <input
-                  type="text"
-                  name="nomeResponsavel"
-                  value={formData.nomeResponsavel}
-                  onChange={handleChange}
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div>
-                <label className="input-label">CPF do Responsável</label>
-                <input
-                  type="text"
-                  name="cpfResponsavel"
-                  value={formData.cpfResponsavel}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="123.456.789-00"
-                />
-              </div>
-              <div>
-                <label className="input-label">Telefone</label>
-                <input
-                  type="tel"
-                  name="telefone"
-                  value={formData.telefone}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
+              
+              {maiorIdade && (
+                <>
+                  <div className="md:col-span-2">
+                    <label className="input-label">Telefone *</label>
+                    <input
+                      type="tel"
+                      name="telefone"
+                      value={formData.telefone}
+                      onChange={handleChange}
+                      className="input-field"
+                      placeholder="(21) 99999-9999"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="input-label">Documento (RG ou CPF) em PDF *</label>
+                    <div className="mt-1">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".pdf"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="documento"
+                      />
+                      {docNome ? (
+                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                          <span className="text-sm text-gray-600 truncate">{docNome}</span>
+                          <button type="button" onClick={handleRemoveFile} className="text-red-500 hover:text-red-700">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label 
+                          htmlFor="documento"
+                          className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-colors"
+                        >
+                          <Upload className="w-5 h-5 text-gray-400" />
+                          <span className="text-sm text-gray-500">Clique para enviar PDF (máx 5MB)</span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
+          {!maiorIdade && (
+            <div className="card">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">2. Dados do Responsável Legal *</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="input-label">Nome do Responsável *</label>
+                  <input
+                    type="text"
+                    name="nomeResponsavel"
+                    value={formData.nomeResponsavel}
+                    onChange={handleChange}
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="input-label">CPF do Responsável *</label>
+                  <input
+                    type="text"
+                    name="cpfResponsavel"
+                    value={formData.cpfResponsavel}
+                    onChange={handleChange}
+                    className="input-field"
+                    placeholder="123.456.789-00"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">2. Autorização para Prática de Atividade Física</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              {maiorIdade ? '2. Autorização para Prática de Atividade Física' : '3. Autorização para Prática de Atividade Física'}
+            </h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-700 text-sm leading-relaxed">
-                Pelo presente instrumento, eu, acima identificado(a), na qualidade de aluno(a) ou responsável legal,
+                Pelo presente instrumento, eu, acima identificado(a), na qualidade de aluno(a){!maiorIdade && ' ou responsável legal'},
                 <strong> AUTORIZO </strong> a participação do referido aluno nas atividades físicas,
                 esportivas e recreativas promovidas pelo Instituto Seed Esportes.
               </p>
@@ -303,7 +477,9 @@ export default function InscricaoPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">3. Autorização de Uso de Imagem, Vídeo e Áudio</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              {maiorIdade ? '3. Autorização de Uso de Imagem, Vídeo e Áudio' : '4. Autorização de Uso de Imagem, Vídeo e Áudio'}
+            </h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-700 text-sm leading-relaxed">
                 <strong> AUTORIZO </strong> livre de qualquer ônus, em caráter definitivo e irrevogável,
@@ -322,17 +498,15 @@ export default function InscricaoPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">4. Assinatura e Data</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Assinatura</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="input-label">Local</label>
                 <input
                   type="text"
-                  name="local"
                   value={formData.local}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Cidade - Estado"
+                  className="input-field bg-gray-100"
+                  disabled
                 />
               </div>
               <div>
@@ -347,7 +521,9 @@ export default function InscricaoPage() {
             </div>
 
             <div className="mt-4">
-              <label className="input-label">Assinatura do Responsável Legal</label>
+              <label className="input-label">
+                {maiorIdade ? 'Assinatura do Aluno' : 'Assinatura do Responsável Legal'} *
+              </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
                 <SignatureCanvas
                   ref={sigCanvas}
