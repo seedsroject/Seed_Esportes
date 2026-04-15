@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { FileText, Download, User, Phone, Calendar, MapPin, Search, LogOut, RefreshCw, Copy, Check, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getAdminSession, logoutAdmin } from '@/lib/auth';
@@ -148,11 +149,21 @@ export default function AdminPage() {
 
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Seed Esportes</h1>
-              <p className="text-sm text-gray-500">Termos de Autorização</p>
+          <div className="flex items-center gap-3">
+              <div className="relative w-12 h-12">
+                <Image
+                  src="/logo.png"
+                  alt="Seed Esportes"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Seed Esportes</h1>
+                <p className="text-sm text-gray-500">Termos de Autorização</p>
+              </div>
             </div>
+            <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setModalAberto(true)}
