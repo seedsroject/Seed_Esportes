@@ -206,28 +206,37 @@ export default function InscricaoPage() {
       let documentosUrl = null;
 
       if (formData.documentos) {
-        const docName = `doc_${formData.nomeAluno.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+        const timestamp = Date.now();
+        const docName = `seed_${timestamp}.pdf`;
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('termos')
           .upload(docName, formData.documentos, { contentType: 'application/pdf' });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Erro upload documento:', uploadError);
+          throw new Error('Erro ao enviar documento: ' + uploadError.message);
+        }
 
-        const { data: urlData } = supabase.storage.from('termos').getPublicUrl(uploadData.path);
-        documentosUrl = urlData.publicUrl;
+        const docPath = uploadData.path;
+        documentosUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/termos/${docPath}`;
       }
 
       const pdf = await generatePDF();
       const pdfBlob = pdf.output('blob');
-      const pdfName = `termo_${formData.nomeAluno.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+      const pdfName = `termo_seed_${Date.now()}.pdf`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('termos')
         .upload(pdfName, pdfBlob, { contentType: 'application/pdf' });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro upload PDF:', uploadError);
+        throw new Error('Erro ao gerar PDF: ' + uploadError.message);
+      }
 
-      const { data: urlData } = supabase.storage.from('termos').getPublicUrl(uploadData.path);
+      const pdfPath = uploadData.path;
+      const pdfUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/termos/${pdfPath}`;
 
       const dadosInserir = {
         nome_aluno: formData.nomeAluno,
@@ -236,7 +245,7 @@ export default function InscricaoPage() {
         telefone: formData.telefone || null,
         local: formData.local,
         assinatura: formData.assinatura || null,
-        pdf_url: urlData.publicUrl,
+        pdf_url: pdfUrl,
         documentos_url: documentosUrl,
       };
 
