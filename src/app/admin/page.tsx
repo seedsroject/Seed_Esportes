@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, Download, User, Phone, Calendar, MapPin, Search, LogOut, Plus, RefreshCw, Send, Copy, Check, X, MessageCircle, ExternalLink } from 'lucide-react';
+import { FileText, Download, User, Phone, Calendar, MapPin, Search, LogOut, RefreshCw, Copy, Check, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getAdminSession, logoutAdmin } from '@/lib/auth';
 
 interface Aluno {
   id: string;
-  codigo: string;
+  id_inscricao: number;
   nome_aluno: string;
   data_nascimento: string;
   rg_cpf: string;
@@ -18,29 +18,7 @@ interface Aluno {
   local: string;
   assinatura: string;
   pdf_url: string | null;
-  link_enviado: boolean;
   created_at: string;
-}
-
-function generateCodigo(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-function getLinkFormulario(codigo: string) {
-  if (typeof window === 'undefined') return '';
-  return `${window.location.origin}/form/${codigo}`;
-}
-
-function formatarTelefone(telefone: string) {
-  const numeros = telefone.replace(/\D/g, '');
-  if (numeros.startsWith('55')) return numeros;
-  if (numeros.startsWith('0')) return numeros.substring(1);
-  return `55${numeros}`;
 }
 
 export default function AdminPage() {
@@ -49,13 +27,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [verificando, setVerificando] = useState(true);
-  const [gerandoLink, setGerandoLink] = useState(false);
-  
   const [modalAberto, setModalAberto] = useState(false);
-  const [codigoGerado, setCodigoGerado] = useState('');
-  const [telefone, setTelefone] = useState('');
   const [linkCopiado, setLinkCopiado] = useState(false);
-  const [mensagem, setMensagem] = useState('');
 
   async function fetchAlunos() {
     setLoading(true);
@@ -63,7 +36,7 @@ export default function AdminPage() {
       const { data, error } = await supabase
         .from('alunos')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('id_inscricao', { ascending: false });
       
       if (!error && data) {
         setAlunos(data);
@@ -89,73 +62,36 @@ export default function AdminPage() {
     router.push('/login');
   };
 
-  const handleGerarLink = async () => {
-    setGerandoLink(true);
-    try {
-      const codigo = generateCodigo();
-      const { error, data } = await supabase.from('alunos').insert({
-        codigo,
-      }).select();
-
-      if (error) {
-        console.error('Erro ao criar código:', error);
-        alert('Erro ao criar código: ' + error.message);
-      } else {
-        setCodigoGerado(codigo);
-        setModalAberto(true);
-        setMensagem('Preencha o formulário de autorização do Seed Esportes');
-        await fetchAlunos();
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setGerandoLink(false);
-    }
-  };
-
   const handleCopiarLink = async () => {
-    const link = getLinkFormulario(codigoGerado);
+    const link = `${window.location.origin}/inscricao`;
     try {
       await navigator.clipboard.writeText(link);
       setLinkCopiado(true);
+      setTimeout(() => setLinkCopiado(false), 3000);
     } catch {
       setLinkCopiado(false);
     }
   };
 
-  const handleWhatsApp = () => {
-    const link = getLinkFormulario(codigoGerado);
-    const texto = encodeURIComponent(`${mensagem}: ${link}`);
-    const tel = formatarTelefone(telefone);
-    
-    let url = 'https://web.whatsapp.com/send?text=' + texto;
-    if (tel.length > 8) {
-      url = `https://wa.me/${tel}?text=${texto}`;
-    }
-    
-    window.open(url, '_blank');
-  };
-
   const handleFecharModal = () => {
     setModalAberto(false);
-    setCodigoGerado('');
-    setTelefone('');
     setLinkCopiado(false);
   };
 
   const filteredAlunos = alunos.filter(
     (a) =>
       (a.nome_aluno || '').toLowerCase().includes(search.toLowerCase()) ||
-      (a.nome_responsavel || '').toLowerCase().includes(search.toLowerCase()) ||
-      (a.codigo || '').toLowerCase().includes(search.toLowerCase())
+      (a.nome_responsavel || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const formatDate = (date: string) => {
+    if (!date) return '-';
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
-  const countPendentes = alunos.filter(a => !a.nome_aluno || a.nome_aluno === null).length;
-  const countCompletos = alunos.filter(a => !!a.nome_aluno && a.nome_aluno !== null).length;
+  const formatDateTime = (date: string) => {
+    return new Date(date).toLocaleDateString('pt-BR');
+  };
 
   if (verificando) {
     return (
@@ -171,67 +107,40 @@ export default function AdminPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">Enviar Link para Pais</h2>
+              <h2 className="text-lg font-bold text-gray-900">Link para Inscrição</h2>
               <button onClick={handleFecharModal} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="input-label">Código gerado</label>
-                <div className="bg-gray-100 px-4 py-3 rounded-lg font-mono font-bold text-primary text-center text-lg">
-                  {codigoGerado}
-                </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-2">Copie este link e envie para os pais/responsáveis:</p>
+                <code className="block bg-white px-4 py-3 rounded-lg font-mono text-primary text-center text-lg break-all">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/inscricao
+                </code>
               </div>
 
-              <div>
-                <label className="input-label">Telefone (opicional)</label>
-                <input
-                  type="tel"
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                  className="input-field"
-                  placeholder="(11) 99999-9999"
-                />
-                <p className="text-xs text-gray-500 mt-1">Se preenchido, abre WhatsApp direto</p>
-              </div>
+              <button
+                onClick={handleCopiarLink}
+                className="w-full btn-primary flex items-center justify-center gap-2"
+              >
+                {linkCopiado ? (
+                  <>
+                    <Check className="w-5 h-5" />
+                    Copiado!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5" />
+                    Copiar Link
+                  </>
+                )}
+              </button>
 
-              <div>
-                <label className="input-label">Mensagem</label>
-                <input
-                  type="text"
-                  value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={handleCopiarLink}
-                  className="flex-1 btn-secondary flex items-center justify-center gap-2"
-                >
-                  {linkCopiado ? (
-                    <>
-                      <Check className="w-5 h-5 text-green-600" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-5 h-5" />
-                      Copiar Link
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleWhatsApp}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  WhatsApp
-                </button>
-              </div>
+              <p className="text-xs text-gray-500 text-center">
+                Os pais preencherão o formulário e o aluno aparecerá automaticamente na lista
+              </p>
             </div>
           </div>
         </div>
@@ -246,16 +155,11 @@ export default function AdminPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={handleGerarLink}
-                disabled={gerandoLink}
+                onClick={() => setModalAberto(true)}
                 className="btn-primary flex items-center gap-2"
               >
-                {gerandoLink ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                Enviar Link para Pais
+                <Copy className="w-4 h-4" />
+                Gerar Link
               </button>
               <button
                 onClick={fetchAlunos}
@@ -278,14 +182,14 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
             <div className="text-3xl font-bold text-primary">{alunos.length}</div>
-            <div className="text-sm text-gray-500">Total de Registros</div>
+            <div className="text-sm text-gray-500">Total de Inscritos</div>
           </div>
           <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-            <div className="text-3xl font-bold text-yellow-600">{countPendentes}</div>
-            <div className="text-sm text-gray-500">Aguardando Preenchimento</div>
+            <div className="text-3xl font-bold text-gray-600">-</div>
+            <div className="text-sm text-gray-500">Aguardando</div>
           </div>
           <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-            <div className="text-3xl font-bold text-green-600">{countCompletos}</div>
+            <div className="text-3xl font-bold text-green-600">{alunos.filter(a => a.pdf_url).length}</div>
             <div className="text-sm text-gray-500">Formulários Completos</div>
           </div>
         </div>
@@ -295,7 +199,7 @@ export default function AdminPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Buscar aluno, responsável ou código..."
+              placeholder="Buscar aluno ou responsável..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field pl-10"
@@ -310,9 +214,9 @@ export default function AdminPage() {
         ) : filteredAlunos.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
             <User className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhum registro encontrado</p>
-            <button onClick={handleGerarLink} className="btn-primary mt-4">
-              Gerar primeiro código
+            <p className="text-gray-500">Nenhum aluno inscrito ainda</p>
+            <button onClick={() => setModalAberto(true)} className="btn-primary mt-4">
+              Gerar Link para Pais
             </button>
           </div>
         ) : (
@@ -325,53 +229,43 @@ export default function AdminPage() {
                       <User className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{aluno.nome_aluno || 'Aguardando...'}</h3>
-                      <p className="text-sm text-gray-500">Código: {aluno.codigo}</p>
+                      <h3 className="font-semibold text-gray-900">{aluno.nome_aluno}</h3>
+                      <p className="text-sm text-gray-500">#{aluno.id_inscricao || '-'}</p>
                     </div>
                   </div>
                 </div>
 
-                {aluno.nome_aluno && aluno.nome_aluno !== null ? (
-                  <>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(aluno.data_nascimento)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <User className="w-4 h-4" />
-                        <span>{aluno.nome_responsavel}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Phone className="w-4 h-4" />
-                        <span>{aluno.telefone}</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        {formatDate(aluno.created_at)}
-                      </span>
-                      {aluno.pdf_url && (
-                        <a
-                          href={aluno.pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-secondary flex items-center gap-2 text-sm"
-                        >
-                          <Download className="w-4 h-4" />
-                          PDF
-                        </a>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
-                      Aguardando pais preencherem
-                    </span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="w-4 h-4" />
+                    <span>{formatDate(aluno.data_nascimento)}</span>
                   </div>
-                )}
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <User className="w-4 h-4" />
+                    <span>{aluno.nome_responsavel}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-4 h-4" />
+                    <span>{aluno.telefone || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">
+                    {formatDateTime(aluno.created_at)}
+                  </span>
+                  {aluno.pdf_url && (
+                    <a
+                      href={aluno.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary flex items-center gap-2 text-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      PDF
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
