@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { LogIn, AlertCircle, Loader2 } from 'lucide-react';
 import { loginAdmin, getAdminSession } from '@/lib/auth';
 
 export default function LoginPage() {
@@ -49,8 +50,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <Shield className="w-8 h-8 text-white" />
+          <div className="relative w-32 h-32 mx-auto mb-4">
+            <Image
+              src="/logo.png"
+              alt="Seed Esportes"
+              fill
+              className="object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Seed Esportes</h1>
           <p className="text-gray-600">Área Administrativa</p>
