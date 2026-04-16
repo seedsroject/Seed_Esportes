@@ -7,6 +7,7 @@ import SignatureCanvas from 'react-signature-canvas';
 import { jsPDF } from 'jspdf';
 import { FileText, Check, AlertCircle, Loader2, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getLogoBase64 } from '@/lib/utils';
 
 const INSTITUICAO = {
   razaoSocial: 'Instituto Seed Esportes',
@@ -111,46 +112,48 @@ export default function InscricaoPage() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const centerX = pageWidth / 2;
-    const primaryColor: [number, number, number] = [139, 92, 246]; // Roxo #8b5cf6
+    const primaryColor: [number, number, number] = [124, 58, 237]; // #7c3aed
 
-    // Divisor roxo no topo
-    pdf.setDrawColor(...primaryColor);
-    pdf.setLineWidth(2);
-    pdf.line(15, 15, pageWidth - 15, 15);
+    // 1. Logo Centralizada
+    try {
+      const logoBase64 = await getLogoBase64();
+      if (logoBase64) {
+        pdf.addImage(logoBase64, 'PNG', centerX - 25, 10, 50, 50);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar logo para o PDF', e);
+    }
 
-    // Título centralizado
-    pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(...primaryColor);
-    pdf.text('SEED ESPORTES', centerX, 28, { align: 'center' });
-
-    pdf.setFontSize(12);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text('Termo de Autorização para Atividade Física e', centerX, 38, { align: 'center' });
-    pdf.text('Cessão de Direitos de Imagem, Vídeo e Áudio', centerX, 45, { align: 'center' });
-
-    // Divisor roxo
-    pdf.setDrawColor(...primaryColor);
-    pdf.setLineWidth(1);
-    pdf.line(15, 52, pageWidth - 15, 52);
-
+    // 2. Cabeçalho Institucional (Abaixo da Logo)
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('DADOS DA INSTITUIÇÃO', 15, 62);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(INSTITUICAO.razaoSocial.toUpperCase(), centerX, 65, { align: 'center' });
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Razão Social: ${INSTITUICAO.razaoSocial}`, 15, 70);
-    pdf.text(`Nome Fantasia: ${INSTITUICAO.nomeFantasia}`, 15, 77);
-    pdf.text(`CNPJ: ${INSTITUICAO.cnpj}`, 15, 84);
+    pdf.text(`CNPJ: ${INSTITUICAO.cnpj}`, centerX, 70, { align: 'center' });
 
-    // Divisor roxo
-    pdf.line(15, 91, pageWidth - 15, 91);
+    // Marcador Roxo
+    pdf.setDrawColor(...primaryColor);
+    pdf.setLineWidth(1);
+    pdf.line(15, 75, pageWidth - 15, 75);
 
-    const tipoInscricao = maiorIdade ? 'MAIOR DE IDADE' : 'MENOR DE IDADE';
+    // 3. Título (Abaixo do Cabeçalho)
+    pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`Tipo de Inscrição: ${tipoInscricao}`, 15, 99);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Termo de Autorização para Atividade Física e', centerX, 85, { align: 'center' });
+    pdf.text('Cessão de Direitos de Imagem, Vídeo e Áudio', centerX, 93, { align: 'center' });
 
+    // 4. Dados do Aluno (Seção 1)
+    pdf.setDrawColor(...primaryColor);
+    pdf.setLineWidth(0.5);
+    pdf.line(15, 103, 40, 103);
+    
+    pdf.setFontSize(11);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('1. DADOS DO ALUNO(A)', 15, 112);
+    pdf.text('1. DADOS DO ALUNO(A)', 15, 110);
+    
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     pdf.text(`Nome: ${formData.nomeAluno}`, 15, 120);
     pdf.text(`Data de Nascimento: ${formData.dataNascimento || 'Não informada'}`, 15, 127);
@@ -159,47 +162,57 @@ export default function InscricaoPage() {
       pdf.text(`Telefone: ${formData.telefone || 'Não informado'}`, 15, 141);
     }
 
+    // Dados do Responsável (se menor)
+    let currentY = maiorIdade ? 150 : 165;
     if (!maiorIdade) {
       pdf.setDrawColor(...primaryColor);
-      pdf.line(15, 148, pageWidth - 15, 148);
+      pdf.line(15, 145, 40, 145);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('2. DADOS DO RESPONSÁVEL', 15, 156);
+      pdf.text('2. DADOS DO RESPONSÁVEL', 15, 152);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Nome: ${formData.nomeResponsavel}`, 15, 164);
-      pdf.text(`CPF: ${formData.cpfResponsavel || 'Não informado'}`, 15, 171);
+      pdf.text(`Nome: ${formData.nomeResponsavel}`, 15, 160);
+      pdf.text(`CPF: ${formData.cpfResponsavel || 'Não informado'}`, 15, 167);
+      currentY = 175;
     }
 
-    const auth1Y = maiorIdade ? 155 : 180;
+    // 5. Autorização Física
     pdf.setDrawColor(...primaryColor);
-    pdf.line(15, auth1Y - 3, pageWidth - 15, auth1Y - 3);
+    pdf.line(15, currentY, 40, currentY);
+    const section2Title = maiorIdade ? '2.' : '3.';
     pdf.setFont('helvetica', 'bold');
-    pdf.text(maiorIdade ? '2. AUTORIZAÇÃO - ATIVIDADE FÍSICA' : '3. AUTORIZAÇÃO - ATIVIDADE FÍSICA', 15, auth1Y);
+    pdf.text(`${section2Title} AUTORIZAÇÃO PARA PRÁTICA DE ATIVIDADE FÍSICA`, 15, currentY + 7);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('AUTORIZO a participação do aluno nas atividades físicas, esportivas e', 15, auth1Y + 8);
-    pdf.text('recreativas promovidas pelo Instituto Seed Esportes.', 15, auth1Y + 15);
-    pdf.text('Declaro que o aluno goza de plena saúde física e mental.', 15, auth1Y + 22);
+    const textFisica = pdf.splitTextToSize(
+      'AUTORIZO a participação do aluno nas atividades físicas, esportivas e recreativas promovidas pelo Instituto Seed Esportes. Declaro que o aluno goza de plena saúde física e mental.',
+      pageWidth - 30
+    );
+    pdf.text(textFisica, 15, currentY + 15);
 
-    const auth2Y = maiorIdade ? 185 : 215;
+    // 6. Autorização Imagem
+    currentY += 35;
     pdf.setDrawColor(...primaryColor);
-    pdf.line(15, auth2Y - 3, pageWidth - 15, auth2Y - 3);
+    pdf.line(15, currentY, 40, currentY);
+    const section3Title = maiorIdade ? '3.' : '4.';
     pdf.setFont('helvetica', 'bold');
-    pdf.text(maiorIdade ? '3. AUTORIZAÇÃO - USO DE IMAGEM' : '4. AUTORIZAÇÃO - USO DE IMAGEM', 15, auth2Y);
+    pdf.text(`${section3Title} AUTORIZAÇÃO DE USO DE IMAGEM, VÍDEO E ÁUDIO`, 15, currentY + 7);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e', 15, auth2Y + 8);
-    pdf.text('depoimentos do aluno(a) captados durante as atividades para:', 15, auth2Y + 15);
-    pdf.text('- Divulgação Institucional: Redes sociais, sites e newsletters', 15, auth2Y + 23);
-    pdf.text('- Materiais Publicitários: Folders, banners, vídeos promocionais', 15, auth2Y + 30);
-    pdf.text('- Registros Históricos: Arquivo interno e relatórios', 15, auth2Y + 37);
-    pdf.text('Esta autorização é gratuita, irrevocable e permanente.', 15, auth2Y + 50);
+    const textImagem = pdf.splitTextToSize(
+      'AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e depoimentos do aluno(a) captados durante as atividades para divulgação institucional, materiais publicitários e registros históricos. Esta autorização é gratuita, irrevogável e permanente.',
+      pageWidth - 30
+    );
+    pdf.text(textImagem, 15, currentY + 15);
 
+    // 7. Assinatura
     if (formData.assinatura) {
-      pdf.addImage(formData.assinatura, 'PNG', 15, auth2Y + 65, 60, 25);
+      pdf.addImage(formData.assinatura, 'PNG', centerX - 30, currentY + 40, 60, 25);
     }
 
-    const assinaturaY = auth2Y + 100;
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`Local: ${formData.local}`, 15, assinaturaY);
-    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 100, assinaturaY);
+    pdf.text('_________________________________', centerX, currentY + 75, { align: 'center' });
+    
+    pdf.setFontSize(9);
+    pdf.text(`Local: ${formData.local}`, centerX, currentY + 85, { align: 'center' });
+    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, centerX, currentY + 92, { align: 'center' });
 
     return pdf;
   };
@@ -570,10 +583,10 @@ export default function InscricaoPage() {
               <label className="input-label">
                 {maiorIdade ? 'Assinatura do Aluno' : 'Assinatura do Responsável Legal'} *
               </label>
-              <div className="border border-white/10 rounded-2xl p-2 bg-white/5 backdrop-blur-sm">
+              <div className="border border-white/10 rounded-2xl p-2 bg-slate-200 shadow-inner">
                 <SignatureCanvas
                   ref={sigCanvas}
-                  penColor="white"
+                  penColor="black"
                   canvasProps={{
                     className: 'w-full h-40',
                   }}

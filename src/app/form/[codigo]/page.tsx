@@ -2,11 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import SignatureCanvas from 'react-signature-canvas';
 import { jsPDF } from 'jspdf';
 import { FileText, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { termoSchema, type TermoFormData } from '@/types';
+import { getLogoBase64 } from '@/lib/utils';
 
 const INSTITUICAO = {
   razaoSocial: 'Instituto Seed Esportes',
@@ -62,56 +64,100 @@ export default function FormPage() {
   const generatePDF = async () => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const centerX = pageWidth / 2;
+    const primaryColor: [number, number, number] = [124, 58, 237]; // #7c3aed
 
+    // 1. Logo Centralizada
+    try {
+      const logoBase64 = await getLogoBase64();
+      if (logoBase64) {
+        pdf.addImage(logoBase64, 'PNG', centerX - 25, 10, 50, 50);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar logo para o PDF', e);
+    }
+
+    // 2. Cabeçalho Institucional (Abaixo da Logo)
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(INSTITUICAO.razaoSocial.toUpperCase(), centerX, 65, { align: 'center' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`CNPJ: ${INSTITUICAO.cnpj}`, centerX, 70, { align: 'center' });
+
+    // Marcador Roxo
+    pdf.setDrawColor(...primaryColor);
+    pdf.setLineWidth(1);
+    pdf.line(15, 75, pageWidth - 15, 75);
+
+    // 3. Título (Abaixo do Cabeçalho)
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Termo de Autorização para Atividade Física e', pageWidth / 2, 20, { align: 'center' });
-    pdf.text('Cessão de Direitos de Imagem, Vídeo e Áudio', pageWidth / 2, 28, { align: 'center' });
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Termo de Autorização para Atividade Física e', centerX, 85, { align: 'center' });
+    pdf.text('Cessão de Direitos de Imagem, Vídeo e Áudio', centerX, 93, { align: 'center' });
 
+    // 4. Dados do Aluno (Seção 1)
+    pdf.setDrawColor(...primaryColor);
+    pdf.setLineWidth(0.5);
+    pdf.line(15, 103, 40, 103); // Marcador roxo lateral
+    
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('1. DADOS DO ALUNO(A) E RESPONSÁVEL', 15, 110);
+    
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Instituição responsável:', 15, 45);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Razão Social: ${INSTITUICAO.razaoSocial}`, 15, 52);
-    pdf.text(`Nome Fantasia: ${INSTITUICAO.nomeFantasia}`, 15, 59);
-    pdf.text(`CNPJ: ${INSTITUICAO.cnpj}`, 15, 66);
+    pdf.text(`Nome do Aluno(a): ${formData.nomeAluno}`, 15, 120);
+    pdf.text(`Data de Nascimento: ${formData.dataNascimento}`, 15, 128);
+    pdf.text(`RG/CPF: ${formData.rgCpf}`, 15, 136);
+    pdf.text(`Nome do Responsável: ${formData.nomeResponsavel}`, 15, 144);
+    pdf.text(`CPF do Responsável: ${formData.cpfResponsavel}`, 15, 152);
+    pdf.text(`Telefone: ${formData.telefone}`, 15, 160);
 
+    // 5. Autorização Física (Seção 2)
+    pdf.setDrawColor(...primaryColor);
+    pdf.line(15, 173, 40, 173);
+    
+    pdf.setFontSize(11);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('1. Dados do Aluno(a) e Responsável', 15, 80);
+    pdf.text('2. AUTORIZAÇÃO PARA PRÁTICA DE ATIVIDADE FÍSICA', 15, 180);
+    
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Nome do Aluno(a): ${formData.nomeAluno}`, 15, 90);
-    pdf.text(`Data de Nascimento: ${formData.dataNascimento}`, 15, 100);
-    pdf.text(`RG/CPF: ${formData.rgCpf}`, 15, 110);
-    pdf.text(`Nome do Responsável: ${formData.nomeResponsavel}`, 15, 120);
-    pdf.text(`CPF do Responsável: ${formData.cpfResponsavel}`, 15, 130);
-    pdf.text(`Telefone: ${formData.telefone}`, 15, 140);
+    const textFisica = pdf.splitTextToSize(
+      'AUTORIZO a participação do aluno nas atividades físicas, esportivas e recreativas promovidas pelo Instituto Seed Esportes. Declaro que o aluno goza de plena saúde física e mental.',
+      pageWidth - 30
+    );
+    pdf.text(textFisica, 15, 188);
 
+    // 6. Autorização Imagem (Seção 3)
+    pdf.setDrawColor(...primaryColor);
+    pdf.line(15, 208, 40, 208);
+    
+    pdf.setFontSize(11);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('2. Autorização para Prática de Atividade Física', 15, 155);
+    pdf.text('3. AUTORIZAÇÃO DE USO DE IMAGEM, VÍDEO E ÁUDIO', 15, 215);
+    
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('AUTORIZO a participação do aluno nas atividades físicas, esportivas e', 15, 165);
-    pdf.text('recreativas promovidas pelo Instituto Seed Esportes.', 15, 172);
-    pdf.text('Declaro que o aluno goza de plena saúde física e mental.', 15, 185);
+    const textImagem = pdf.splitTextToSize(
+      'AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e depoimentos do aluno(a) captados durante as atividades para divulgação institucional, materiais publicitários e registros históricos. Esta autorização é gratuita, irrevogável e permanente.',
+      pageWidth - 30
+    );
+    pdf.text(textImagem, 15, 223);
 
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('3. Autorização de Uso de Imagem, Vídeo e Áudio', 15, 200);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e', 15, 210);
-    pdf.text('depoimentos do aluno(a) captados durante as atividades para:', 15, 217);
-    pdf.text('- Divulgação Institucional: Redes sociais, sites e newsletters', 15, 227);
-    pdf.text('- Materiais Publicitários: Folders, banners, vídeos promocionais', 15, 234);
-    pdf.text('- Registros Históricos: Arquivo interno e relatórios', 15, 241);
-
-    pdf.text('Esta autorização é gratuita, irrevocable epermanente.', 15, 255);
-
+    // 7. Assinatura
     if (formData.assinatura) {
-      const imgData = formData.assinatura;
-      pdf.addImage(imgData, 'PNG', 15, 270, 60, 25);
+      pdf.addImage(formData.assinatura, 'PNG', centerX - 30, 245, 60, 25);
     }
 
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`Local: ${formData.local}`, 15, 305);
-    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 100, 305);
+    pdf.text('_________________________________', centerX, 275, { align: 'center' });
+    
+    pdf.setFontSize(9);
+    pdf.text(`Local: ${formData.local}`, centerX, 285, { align: 'center' });
+    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, centerX, 292, { align: 'center' });
 
     return pdf;
   };
@@ -386,10 +432,10 @@ export default function FormPage() {
 
             <div className="mt-4">
               <label className="input-label">Assinatura do Responsável Legal</label>
-              <div className="border border-white/10 rounded-2xl p-2 bg-white/5 backdrop-blur-sm">
+              <div className="border border-white/10 rounded-2xl p-2 bg-slate-200 shadow-inner">
                 <SignatureCanvas
                   ref={sigCanvas}
-                  penColor="white"
+                  penColor="black"
                   canvasProps={{
                     className: 'w-full h-40',
                   }}

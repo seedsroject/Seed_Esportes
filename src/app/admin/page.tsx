@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FileText, Download, User, Phone, Calendar, MapPin, Search, LogOut, RefreshCw, Copy, Check, X } from 'lucide-react';
+import { FileText, Download, User, Phone, Calendar, MapPin, Search, LogOut, RefreshCw, Copy, Check, X, Trash2, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getAdminSession, logoutAdmin } from '@/lib/auth';
 
@@ -19,6 +19,7 @@ interface Aluno {
   local: string;
   assinatura: string;
   pdf_url: string | null;
+  documentos_url: string | null;
   created_at: string;
 }
 
@@ -61,6 +62,48 @@ export default function AdminPage() {
   const handleLogout = () => {
     logoutAdmin();
     router.push('/login');
+  };
+
+  const handleDelete = async (id: string, nome: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir a inscrição de ${nome}? Esta ação não pode ser desfeita.`)) {
+      try {
+        const alunoParaExcluir = alunos.find(a => a.id === id);
+        
+        // 1. Limpeza do Storage (Arquivos PDF e Documentos)
+        const filesToDelete: string[] = [];
+        if (alunoParaExcluir?.pdf_url) {
+          const pdfFileName = alunoParaExcluir.pdf_url.split('/').pop();
+          if (pdfFileName) filesToDelete.push(pdfFileName);
+        }
+        if (alunoParaExcluir?.documentos_url) {
+          const docFileName = alunoParaExcluir.documentos_url.split('/').pop();
+          if (docFileName) filesToDelete.push(docFileName);
+        }
+
+        if (filesToDelete.length > 0) {
+          await supabase.storage.from('termos').remove(filesToDelete);
+        }
+
+        // 2. Exclusão no Banco de Dados com Validação de Contagem
+        const { error, count } = await supabase
+          .from('alunos')
+          .delete({ count: 'exact' })
+          .eq('id', id);
+        
+        if (error) throw error;
+
+        if (count === 0) {
+          alert('A exclusão foi bloqueada pelo banco de dados. Verifique se a política de DELETE no Supabase foi salva corretamente.');
+          return;
+        }
+        
+        // Sucesso real: Atualiza a lista localmente
+        setAlunos(alunos.filter(a => a.id !== id));
+      } catch (err) {
+        console.error('Erro ao excluir:', err);
+        alert('Erro ao excluir a inscrição. Tente novamente.');
+      }
+    }
   };
 
   const handleCopiarLink = async () => {
@@ -126,22 +169,30 @@ export default function AdminPage() {
                 </code>
               </div>
 
-              <button
-                onClick={handleCopiarLink}
-                className="w-full btn-primary flex items-center justify-center gap-2"
-              >
-                {linkCopiado ? (
-                  <>
+               <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleCopiarLink}
+                  className="flex-1 btn-primary flex items-center justify-center gap-2"
+                >
+                  {linkCopiado ? (
                     <Check className="w-5 h-5" />
-                    Copiado para área de transferência
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <Copy className="w-5 h-5" />
-                    Copiar Link de Inscrição
-                  </>
-                )}
-              </button>
+                  )}
+                  {linkCopiado ? 'Copiado' : 'Copiar Link'}
+                </button>
+                <button
+                  onClick={() => {
+                    const link = `${window.location.origin}/inscricao`;
+                    const text = encodeURIComponent(`Olá! Faça sua inscrição no Instituto Seed Esportes aqui: ${link}`);
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                  }}
+                  className="flex-1 bg-[#25D366] hover:bg-[#25D366]/90 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  WhatsApp
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -255,6 +306,13 @@ export default function AdminPage() {
                       <p className="text-xs text-slate-500 font-mono">#{aluno.id_inscricao || '-'}</p>
                     </div>
                   </div>
+                  <button
+                    onClick={() => handleDelete(aluno.id, aluno.nome_aluno)}
+                    className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all duration-300"
+                    title="Excluir Inscrição"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
 
                 <div className="space-y-3 text-sm">
