@@ -201,16 +201,22 @@ export default function FormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-primary rounded-xl mb-3">
-            <FileText className="w-7 h-7 text-white" />
+    <div className="min-h-screen py-8 px-4 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-[100px]" />
+      <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
+
+      <div className="max-w-3xl mx-auto relative z-10">
+        <div className="text-center mb-10">
+          <div className="relative w-32 h-32 mx-auto mb-2">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              fill
+              className="object-contain drop-shadow-[0_0_15px_rgba(124,58,237,0.2)]"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Termo de Autorização
-          </h1>
-          <p className="text-gray-600">Seed Esportes</p>
+          <p className="text-slate-400 font-medium tracking-widest uppercase text-[10px]">Termo de Autorização</p>
         </div>
 
         {erro && (
@@ -222,25 +228,25 @@ export default function FormPage() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Instituição</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">Dados da Instituição</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-gray-500">Razão Social</p>
-                <p className="font-medium">{INSTITUICAO.razaoSocial}</p>
+                <p className="text-slate-500">Razão Social</p>
+                <p className="font-medium text-slate-300">{INSTITUICAO.razaoSocial}</p>
               </div>
               <div>
-                <p className="text-gray-500">Nome Fantasia</p>
-                <p className="font-medium">{INSTITUICAO.nomeFantasia}</p>
+                <p className="text-slate-500">Nome Fantasia</p>
+                <p className="font-medium text-slate-300">{INSTITUICAO.nomeFantasia}</p>
               </div>
               <div>
-                <p className="text-gray-500">CNPJ</p>
-                <p className="font-medium">{INSTITUICAO.cnpj}</p>
+                <p className="text-slate-500">CNPJ</p>
+                <p className="font-medium text-slate-300">{INSTITUICAO.cnpj}</p>
               </div>
             </div>
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">1. Dados do Aluno(a) e Responsável</h2>
+            <h2 className="text-lg font-semibold text-slate-200 mb-4">1. Dados do Aluno(a) e Responsável</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="input-label">Nome do Aluno(a)</label>
@@ -315,17 +321,17 @@ export default function FormPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">2. Autorização para Prática de Atividade Física</h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700 text-sm leading-relaxed">
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">2. Autorização para Prática de Atividade Física</h2>
+            <div className="bg-white/5 rounded-lg p-4">
+              <p className="text-slate-300 text-sm leading-relaxed">
                 Pelo presente instrumento, eu, acima identificado(a), na qualidade de aluno(a) ou responsável legal,
                 <strong> AUTORIZO </strong> a participação do referido aluno nas atividades físicas,
                 esportivas e recreativas promovidas pelo Instituto Seed Esportes.
               </p>
-              <p className="text-gray-700 text-sm leading-relaxed mt-3">
+              <p className="text-slate-300 text-sm leading-relaxed mt-3">
                 Declaro estar ciente de que:
               </p>
-              <ul className="text-gray-700 text-sm mt-2 space-y-1 list-disc list-inside">
+              <ul className="text-slate-400 text-sm mt-2 space-y-1 list-disc list-inside">
                 <li>O aluno goza de plena saúde física e mental</li>
                 <li>Não tenho conhecimento de nenhuma contraindicação médica</li>
                 <li>Comprometo-me a informar alterações no estado de saúde</li>
@@ -334,26 +340,26 @@ export default function FormPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">3. Autorização de Uso de Imagem, Vídeo e Áudio</h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700 text-sm leading-relaxed">
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">3. Autorização de Uso de Imagem, Vídeo e Áudio</h2>
+            <div className="bg-white/5 rounded-lg p-4">
+              <p className="text-slate-300 text-sm leading-relaxed">
                 <strong> AUTORIZO </strong> livre de qualquer ônus, em caráter definitivo e irrevogável,
                 o Instituto Seed Esportes a utilizar a imagem, voz e depoimentos do aluno(a) captados
                 durante as atividades do projeto para:
               </p>
-              <ul className="text-gray-700 text-sm mt-3 space-y-1">
-                <li><strong>1.</strong> Divulgação Institucional: Redes sociais (Instagram, Facebook, LinkedIn, YouTube, TikTok), sites e newsletters</li>
-                <li><strong>2.</strong> Materiais Publicitários: Folders, banners, vídeos promocionais</li>
-                <li><strong>3.</strong> Registros Históricos: Arquivo interno e relatórios</li>
+              <ul className="text-slate-400 text-sm mt-3 space-y-1">
+                <li><strong className="text-primary font-bold">1.</strong> Divulgação Institucional: Redes sociais (Instagram, Facebook, LinkedIn, YouTube, TikTok), sites e newsletters</li>
+                <li><strong className="text-primary font-bold">2.</strong> Materiais Publicitários: Folders, banners, vídeos promocionais</li>
+                <li><strong className="text-primary font-bold">3.</strong> Registros Históricos: Arquivo interno e relatórios</li>
               </ul>
-              <p className="text-gray-700 text-sm mt-3">
+              <p className="text-slate-400 text-sm mt-3 italic">
                 Esta autorização é gratuita, abrangendo todo o território nacional e exterior, por tempo indeterminado.
               </p>
             </div>
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">4. Assinatura e Data</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">4. Assinatura e Data</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="input-label">Local</label>
@@ -372,7 +378,7 @@ export default function FormPage() {
                 <input
                   type="text"
                   value={new Date().toLocaleDateString('pt-BR')}
-                  className="input-field bg-gray-100"
+                  className="input-field bg-white/5 opacity-70"
                   disabled
                 />
               </div>
@@ -380,10 +386,10 @@ export default function FormPage() {
 
             <div className="mt-4">
               <label className="input-label">Assinatura do Responsável Legal</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
+              <div className="border border-white/10 rounded-2xl p-2 bg-white/5 backdrop-blur-sm">
                 <SignatureCanvas
                   ref={sigCanvas}
-                  penColor="black"
+                  penColor="white"
                   canvasProps={{
                     className: 'w-full h-40',
                   }}
@@ -394,7 +400,7 @@ export default function FormPage() {
                   }}
                 />
               </div>
-              <button type="button" onClick={clearSignature} className="btn-secondary mt-2 text-sm">
+              <button type="button" onClick={clearSignature} className="btn-secondary mt-3 text-sm">
                 Limpar Assinatura
               </button>
             </div>

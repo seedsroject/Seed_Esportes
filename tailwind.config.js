@@ -9,7 +9,8 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#8b5cf6',
+          DEFAULT: '#7c3aed',
+          dark: '#5b21b6',
           50: '#f5f3ff',
           100: '#ede9fe',
           200: '#ddd6fe',
@@ -20,16 +21,28 @@ module.exports = {
           700: '#6d28d9',
           800: '#5b21b6',
           900: '#4c1d95',
+          950: '#1e1b4b',
         },
         seed: {
-          DEFAULT: '#8b5cf6',
-          dark: '#6d28d9',
+          DEFAULT: '#7c3aed',
+          dark: '#5b21b6',
           light: '#a78bfa',
         },
+        slate: {
+          950: '#020617',
+          900: '#0f172a',
+          800: '#1e293b',
+        }
+      },
+      backgroundImage: {
+        'glass-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      backdropBlur: {
+        xs: '2px',
+      }
     },
   },
   plugins: [],

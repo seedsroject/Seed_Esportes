@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Seed Esportes - Termo de Autorização',
-  description: 'Termo de Autorização para Atividade Física e Cessão de Direitos de Imagem',
+  title: 'Seed - Autorizações Esportivas',
+  description: 'Gestão Inteligente de Termos e Autorizações',
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

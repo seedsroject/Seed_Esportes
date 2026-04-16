@@ -40,26 +40,29 @@ export default function LoginPage() {
 
   if (verificando) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="relative w-32 h-32 mx-auto mb-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
+
+      <div className="max-w-md w-full relative z-10">
+        <div className="text-center mb-10">
+          <div className="relative w-40 h-40 mx-auto mb-2 animate-float">
             <Image
               src="/logo.png"
-              alt="Seed Esportes"
+              alt="Logo"
               fill
-              className="object-contain"
+              className="object-contain drop-shadow-[0_0_25px_rgba(124,58,237,0.3)]"
             />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Seed Esportes</h1>
-          <p className="text-gray-600">Área Administrativa</p>
+          <p className="text-slate-400 font-medium tracking-wide uppercase text-xs">Acesso Administrativo</p>
         </div>
 
         {erro && (

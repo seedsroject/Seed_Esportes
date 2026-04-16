@@ -320,20 +320,22 @@ export default function InscricaoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="relative w-32 h-32 mx-auto mb-4">
+    <div className="min-h-screen py-8 px-4 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-[100px]" />
+      <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
+
+      <div className="max-w-3xl mx-auto relative z-10">
+        <div className="text-center mb-10">
+          <div className="relative w-32 h-32 mx-auto mb-2 animate-float">
             <Image
               src="/logo.png"
-              alt="Seed Esportes"
+              alt="Logo"
               fill
-              className="object-contain"
+              className="object-contain drop-shadow-[0_0_15px_rgba(124,58,237,0.2)]"
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Fazer Inscrição
-          </h1>
+          <p className="text-slate-400 font-medium tracking-widest uppercase text-[10px]">Ficha de Inscrição</p>
         </div>
 
         {erro && (
@@ -345,19 +347,19 @@ export default function InscricaoPage() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Instituição</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">Dados da Instituição</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-gray-500">Razão Social</p>
-                <p className="font-medium">{INSTITUICAO.razaoSocial}</p>
+                <p className="text-slate-500">Razão Social</p>
+                <p className="font-medium text-slate-300">{INSTITUICAO.razaoSocial}</p>
               </div>
               <div>
-                <p className="text-gray-500">Nome Fantasia</p>
-                <p className="font-medium">{INSTITUICAO.nomeFantasia}</p>
+                <p className="text-slate-500">Nome Fantasia</p>
+                <p className="font-medium text-slate-300">{INSTITUICAO.nomeFantasia}</p>
               </div>
               <div>
-                <p className="text-gray-500">CNPJ</p>
-                <p className="font-medium">{INSTITUICAO.cnpj}</p>
+                <p className="text-slate-500">CNPJ</p>
+                <p className="font-medium text-slate-300">{INSTITUICAO.cnpj}</p>
               </div>
             </div>
           </div>
@@ -370,13 +372,13 @@ export default function InscricaoPage() {
                 name="maiorIdade"
                 checked={maiorIdade}
                 onChange={handleChange}
-                className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-5 h-5 rounded border-white/20 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0"
               />
-              <label htmlFor="maiorIdade" className="text-lg font-semibold text-gray-900">
+              <label htmlFor="maiorIdade" className="text-lg font-semibold text-white">
                 Sou maior de 18 anos
               </label>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-400">
               {maiorIdade 
                 ? 'Você irá preencher seus próprios dados e enviar documentos.' 
                 : 'Um responsável legal precisa assinar o termo.'}
@@ -384,7 +386,7 @@ export default function InscricaoPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">1. Dados do Aluno(a)</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">1. Dados do Aluno(a)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="input-label">Nome Completo *</label>
@@ -446,19 +448,19 @@ export default function InscricaoPage() {
                         id="documento"
                       />
                       {docNome ? (
-                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                          <span className="text-sm text-gray-600 truncate">{docNome}</span>
-                          <button type="button" onClick={handleRemoveFile} className="text-red-500 hover:text-red-700">
-                            <X className="w-4 h-4" />
+                        <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/10">
+                          <span className="text-sm text-slate-300 truncate">{docNome}</span>
+                          <button type="button" onClick={handleRemoveFile} className="text-red-400 hover:text-red-300 transition-colors">
+                            <X className="w-5 h-5" />
                           </button>
                         </div>
                       ) : (
                         <label 
                           htmlFor="documento"
-                          className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-colors"
+                          className="flex items-center justify-center gap-3 border-2 border-dashed border-white/10 rounded-2xl p-6 cursor-pointer hover:border-primary/50 hover:bg-white/5 transition-all group"
                         >
-                          <Upload className="w-5 h-5 text-gray-400" />
-                          <span className="text-sm text-gray-500">Clique para enviar PDF (máx 5MB)</span>
+                          <Upload className="w-6 h-6 text-slate-500 group-hover:text-primary transition-colors" />
+                          <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Clique para enviar PDF (máx 5MB)</span>
                         </label>
                       )}
                     </div>
@@ -470,7 +472,7 @@ export default function InscricaoPage() {
 
           {!maiorIdade && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">2. Dados do Responsável Legal *</h2>
+              <h2 className="text-lg font-semibold text-slate-100 mb-4">2. Dados do Responsável Legal *</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="input-label">Nome do Responsável *</label>
@@ -500,19 +502,19 @@ export default function InscricaoPage() {
           )}
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">
               {maiorIdade ? '2. Autorização para Prática de Atividade Física' : '3. Autorização para Prática de Atividade Física'}
             </h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700 text-sm leading-relaxed">
+            <div className="bg-white/5 rounded-lg p-4">
+              <p className="text-slate-300 text-sm leading-relaxed">
                 Pelo presente instrumento, eu, acima identificado(a), na qualidade de aluno(a){!maiorIdade && ' ou responsável legal'},
                 <strong> AUTORIZO </strong> a participação do referido aluno nas atividades físicas,
                 esportivas e recreativas promovidas pelo Instituto Seed Esportes.
               </p>
-              <p className="text-gray-700 text-sm leading-relaxed mt-3">
+              <p className="text-slate-300 text-sm leading-relaxed mt-3">
                 Declaro estar ciente de que:
               </p>
-              <ul className="text-gray-700 text-sm mt-2 space-y-1 list-disc list-inside">
+              <ul className="text-slate-400 text-sm mt-2 space-y-1 list-disc list-inside">
                 <li>O aluno goza de plena saúde física e mental</li>
                 <li>Não tenho conhecimento de nenhuma contraindicação médica</li>
                 <li>Comprometo-me a informar alterações no estado de saúde</li>
@@ -521,35 +523,35 @@ export default function InscricaoPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">
               {maiorIdade ? '3. Autorização de Uso de Imagem, Vídeo e Áudio' : '4. Autorização de Uso de Imagem, Vídeo e Áudio'}
             </h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700 text-sm leading-relaxed">
+            <div className="bg-white/5 rounded-lg p-4">
+              <p className="text-slate-300 text-sm leading-relaxed">
                 <strong> AUTORIZO </strong> livre de qualquer ônus, em caráter definitivo e irrevogável,
                 o Instituto Seed Esportes a utilizar a imagem, voz e depoimentos do aluno(a) captados
                 durante as atividades do projeto para:
               </p>
-              <ul className="text-gray-700 text-sm mt-3 space-y-1">
-                <li><strong>1.</strong> Divulgação Institucional: Redes sociais (Instagram, Facebook, LinkedIn, YouTube, TikTok), sites e newsletters</li>
-                <li><strong>2.</strong> Materiais Publicitários: Folders, banners, vídeos promocionais</li>
-                <li><strong>3.</strong> Registros Históricos: Arquivo interno e relatórios</li>
+              <ul className="text-slate-400 text-sm mt-3 space-y-1">
+                <li><strong className="text-primary font-bold">1.</strong> Divulgação Institucional: Redes sociais (Instagram, Facebook, LinkedIn, YouTube, TikTok), sites e newsletters</li>
+                <li><strong className="text-primary font-bold">2.</strong> Materiais Publicitários: Folders, banners, vídeos promocionais</li>
+                <li><strong className="text-primary font-bold">3.</strong> Registros Históricos: Arquivo interno e relatórios</li>
               </ul>
-              <p className="text-gray-700 text-sm mt-3">
+              <p className="text-slate-400 text-sm mt-3 italic">
                 Esta autorização é gratuita, abrangendo todo o território nacional e exterior, por tempo indeterminado.
               </p>
             </div>
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Assinatura</h2>
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">Assinatura</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="input-label">Local</label>
                 <input
                   type="text"
                   value={formData.local}
-                  className="input-field bg-gray-100"
+                  className="input-field bg-white/5 opacity-70"
                   disabled
                 />
               </div>
@@ -558,7 +560,7 @@ export default function InscricaoPage() {
                 <input
                   type="text"
                   value={new Date().toLocaleDateString('pt-BR')}
-                  className="input-field bg-gray-100"
+                  className="input-field bg-white/5 opacity-70"
                   disabled
                 />
               </div>
@@ -568,10 +570,10 @@ export default function InscricaoPage() {
               <label className="input-label">
                 {maiorIdade ? 'Assinatura do Aluno' : 'Assinatura do Responsável Legal'} *
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
+              <div className="border border-white/10 rounded-2xl p-2 bg-white/5 backdrop-blur-sm">
                 <SignatureCanvas
                   ref={sigCanvas}
-                  penColor="black"
+                  penColor="white"
                   canvasProps={{
                     className: 'w-full h-40',
                   }}
@@ -582,7 +584,7 @@ export default function InscricaoPage() {
                   }}
                 />
               </div>
-              <button type="button" onClick={clearSignature} className="btn-secondary mt-2 text-sm">
+              <button type="button" onClick={clearSignature} className="btn-secondary mt-3 text-sm">
                 Limpar Assinatura
               </button>
             </div>
