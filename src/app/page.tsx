@@ -13,7 +13,7 @@ export default function Home() {
     if (session) {
       router.push('/admin');
     } else {
-      router.push('/inscricao');
+      router.push('/login');
     }
   }, [router]);
 
