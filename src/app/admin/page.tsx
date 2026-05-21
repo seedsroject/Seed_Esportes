@@ -171,7 +171,7 @@ export default function AdminPage() {
       {/* Modal de Link */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-container max-w-md w-full p-8 shadow-2xl relative">
+          <div className="glass-container max-w-xl w-full p-8 shadow-2xl relative">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">Link de Acesso</h2>
               <button onClick={handleFecharModal} className="text-slate-400 hover:text-white transition-colors">
