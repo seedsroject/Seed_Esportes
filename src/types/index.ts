@@ -14,6 +14,14 @@ export const termoSchema = z.object({
 
 export type TermoFormData = z.infer<typeof termoSchema>;
 
+export interface AutorizacaoViagem {
+  id: string;
+  aluno_id: string;
+  pdf_url: string;
+  documento_foto_url: string;
+  created_at: string;
+}
+
 export interface Aluno {
   id: string;
   codigo: string;
@@ -27,4 +35,5 @@ export interface Aluno {
   assinatura: string;
   pdfUrl?: string;
   createdAt: string;
+  autorizacoes_viagem?: AutorizacaoViagem[];
 }

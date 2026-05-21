@@ -7,6 +7,14 @@ import { FileText, Download, User, Phone, Calendar, MapPin, Search, LogOut, Refr
 import { supabase } from '@/lib/supabase';
 import { getAdminSession, logoutAdmin } from '@/lib/auth';
 
+interface AutorizacaoViagem {
+  id: string;
+  aluno_id: string;
+  pdf_url: string;
+  documento_foto_url: string;
+  created_at: string;
+}
+
 interface Aluno {
   id: string;
   id_inscricao: number;
@@ -21,6 +29,7 @@ interface Aluno {
   pdf_url: string | null;
   documentos_url: string | null;
   created_at: string;
+  autorizacoes_viagem?: AutorizacaoViagem[];
 }
 
 export default function AdminPage() {
@@ -38,7 +47,7 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase
         .from('alunos')
-        .select('*')
+        .select('*, autorizacoes_viagem(*)')
         .order('id_inscricao', { ascending: false });
       
       if (!error && data) {
@@ -172,9 +181,14 @@ export default function AdminPage() {
 
             <div className="space-y-6">
               <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
-                <p className="text-sm text-slate-400 mb-3 text-center">Envie este link para os pais/responsáveis:</p>
+                <p className="text-sm text-slate-400 mb-3 text-center">Termo de Inscrição:</p>
                 <code className="block bg-black/40 px-4 py-4 rounded-xl font-mono text-primary text-center text-sm break-all border border-primary/20 shadow-inner">
                   {typeof window !== 'undefined' ? window.location.origin : ''}/inscricao
+                </code>
+                
+                <p className="text-sm text-slate-400 mt-6 mb-3 text-center">Autorização de Viagem:</p>
+                <code className="block bg-black/40 px-4 py-4 rounded-xl font-mono text-emerald-500 text-center text-sm break-all border border-emerald-500/20 shadow-inner">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/autorizacao-viagem
                 </code>
               </div>
 
@@ -196,10 +210,21 @@ export default function AdminPage() {
                     const text = encodeURIComponent(`Olá! Faça sua inscrição no Instituto Seed Esportes aqui: ${link}`);
                     window.open(`https://wa.me/?text=${text}`, '_blank');
                   }}
-                  className="flex-1 bg-[#25D366] hover:bg-[#25D366]/90 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20"
+                  className="flex-1 bg-[#25D366] hover:bg-[#25D366]/90 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 text-sm"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  WhatsApp
+                  Inscrição
+                </button>
+                <button
+                  onClick={() => {
+                    const link = `${window.location.origin}/autorizacao-viagem`;
+                    const text = encodeURIComponent(`Olá! Assine a autorização de viagem aqui: ${link}`);
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                  }}
+                  className="flex-1 bg-[#25D366] hover:bg-[#25D366]/90 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 text-sm"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Viagem
                 </button>
               </div>
             </div>
@@ -300,7 +325,7 @@ export default function AdminPage() {
                         <FileText className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-white uppercase tracking-tighter">Termo de Autorização</p>
+                        <p className="text-xs font-bold text-white uppercase tracking-tighter">Termo de Inscrição</p>
                         <p className="text-[10px] text-slate-500">PDF Assinado Digitalmente</p>
                       </div>
                     </div>
@@ -367,6 +392,39 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
+
+            {/* Autorizações de Viagem */}
+            {alunoSelecionado.autorizacoes_viagem && alunoSelecionado.autorizacoes_viagem.length > 0 && (
+              <div className="space-y-6 pt-6 border-t border-white/10">
+                <h3 className="text-sm font-black uppercase tracking-widest text-indigo-500 border-l-2 border-indigo-500 pl-3">Autorizações de Viagem</h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {alunoSelecionado.autorizacoes_viagem.map((auth, index) => (
+                    <div key={auth.id} className="bg-white/5 rounded-2xl p-4 border border-indigo-500/20 flex flex-col gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-indigo-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white uppercase tracking-tighter">Autorização #{index + 1}</p>
+                          <p className="text-[10px] text-slate-500">{formatDate(auth.created_at)}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <a 
+                          href={auth.pdf_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 btn-primary py-2 text-xs flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Visualizar PDF
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-10 flex justify-end gap-4 border-t border-white/5 pt-6">
               <span className="text-[10px] text-slate-500 uppercase mr-auto flex items-center font-mono">

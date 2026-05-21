@@ -76,3 +76,21 @@ CREATE POLICY "Allow public read admins" ON public.admins FOR SELECT USING (true
 INSERT INTO public.admins (email, password_hash, nome) 
 VALUES ('marciocampiaoinmetro@gmail.com', '53540404Lpo', 'Marcio')
 ON CONFLICT (email) DO NOTHING;
+
+-- 5. Criar tabela de autorizações de viagem
+CREATE TABLE IF NOT EXISTS public.autorizacoes_viagem (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    aluno_id UUID REFERENCES public.alunos(id) ON DELETE CASCADE NOT NULL,
+    pdf_url TEXT NOT NULL,
+    documento_foto_url TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Políticas de acesso para autorizacoes_viagem
+ALTER TABLE public.autorizacoes_viagem ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read" ON public.autorizacoes_viagem;
+DROP POLICY IF EXISTS "Allow public insert" ON public.autorizacoes_viagem;
+
+CREATE POLICY "Allow public read" ON public.autorizacoes_viagem FOR SELECT USING (true);
+CREATE POLICY "Allow public insert" ON public.autorizacoes_viagem FOR INSERT WITH CHECK (true);
