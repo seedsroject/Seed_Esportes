@@ -52,6 +52,10 @@ export default function AutorizacaoViagemPage() {
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [busca, setBusca] = useState('');
   
+  const [nomeResponsavel, setNomeResponsavel] = useState('');
+  const [cpfResponsavel, setCpfResponsavel] = useState('');
+  const [rgAluno, setRgAluno] = useState('');
+  
   const [documentoFile, setDocumentoFile] = useState<File | null>(null);
   const [documentoPreview, setDocumentoPreview] = useState<string>('');
   
@@ -83,8 +87,16 @@ export default function AutorizacaoViagemPage() {
     if (alunoSelecionadoId) {
       const aluno = alunos.find(a => a.id === alunoSelecionadoId) || null;
       setAlunoSelecionado(aluno);
+      if (aluno) {
+        setNomeResponsavel(aluno.nome_responsavel || '');
+        setCpfResponsavel(aluno.cpf_responsavel || '');
+        setRgAluno(aluno.rg_cpf || '');
+      }
     } else {
       setAlunoSelecionado(null);
+      setNomeResponsavel('');
+      setCpfResponsavel('');
+      setRgAluno('');
     }
   }, [alunoSelecionadoId, alunos]);
 
@@ -134,12 +146,12 @@ export default function AutorizacaoViagemPage() {
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'normal');
     
-    const nomeResp = aluno.nome_responsavel || '_________________________';
-    const cpfResp = aluno.cpf_responsavel || '________________';
+    const nomeResp = nomeResponsavel || '_________________________';
+    const cpfResp = cpfResponsavel || '________________';
     const nomeAluno = aluno.nome_aluno;
-    const rgAluno = aluno.rg_cpf || '________________';
+    const rgAlunoFinal = rgAluno || '________________';
 
-    const textoParagrafo1 = `Eu, ${nomeResp}, portador(a) do CPF nº ${cpfResp}, na qualidade de responsável legal pelo(a) menor ${nomeAluno}, portador(a) do RG/CPF nº ${rgAluno}, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: ${INSTITUICAO.cnpj}).`;
+    const textoParagrafo1 = `Eu, ${nomeResp}, portador(a) do CPF nº ${cpfResp}, na qualidade de responsável legal pelo(a) menor ${nomeAluno}, portador(a) do RG/CPF nº ${rgAlunoFinal}, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: ${INSTITUICAO.cnpj}).`;
     
     const textoParagrafo2 = `Declaro estar ciente de que as viagens têm finalidade estritamente esportiva e socioeducativa, e que o(a) atleta deverá seguir as regras de conduta e horários estipulados pela comissão técnica do projeto.`;
 
@@ -246,6 +258,13 @@ export default function AutorizacaoViagemPage() {
 
       if (insertError) throw insertError;
 
+      // 4. Atualizar os dados do aluno com as informações mais recentes do responsável
+      await supabase.from('alunos').update({
+        nome_responsavel: nomeResponsavel,
+        cpf_responsavel: cpfResponsavel,
+        rg_cpf: rgAluno
+      }).eq('id', alunoSelecionado.id);
+
       setSucesso(true);
     } catch (err) {
       console.error(err);
@@ -306,6 +325,64 @@ export default function AutorizacaoViagemPage() {
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
+            ) : alunoSelecionado ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-emerald-400 font-medium mb-1">Aluno selecionado:</p>
+                    <p className="text-lg text-white font-bold">{alunoSelecionado.nome_aluno}</p>
+                    <p className="text-xs text-slate-300 mt-1">Cód: {alunoSelecionado.codigo}</p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setAlunoSelecionadoId('');
+                      setBusca('');
+                    }} 
+                    className="btn-secondary text-xs py-2 px-3 whitespace-nowrap ml-4"
+                  >
+                    Trocar Aluno
+                  </button>
+                </div>
+
+                <div className="bg-white/5 p-4 rounded-xl space-y-4 border border-white/10 mt-4">
+                  <h3 className="text-sm font-semibold text-slate-200">Confirme ou preencha os dados para o termo:</h3>
+                  
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Nome Completo do Responsável Legal</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={nomeResponsavel}
+                      onChange={e => setNomeResponsavel(e.target.value)}
+                      required
+                      placeholder="Ex: João da Silva"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">CPF do Responsável</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={cpfResponsavel}
+                      onChange={e => setCpfResponsavel(e.target.value)}
+                      required
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">RG ou CPF do Aluno (Atleta)</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={rgAluno}
+                      onChange={e => setRgAluno(e.target.value)}
+                      required
+                      placeholder="Apenas números ou formato padrão"
+                    />
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
                 <input
@@ -336,13 +413,6 @@ export default function AutorizacaoViagemPage() {
                     ))
                   )}
                 </div>
-              </div>
-            )}
-            
-            {alunoSelecionado && (
-              <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                <p className="text-sm text-emerald-400 font-medium mb-1">Aluno selecionado com sucesso.</p>
-                <p className="text-xs text-slate-300">Responsável legal identificado: {alunoSelecionado.nome_responsavel}</p>
               </div>
             )}
           </div>
@@ -394,7 +464,7 @@ export default function AutorizacaoViagemPage() {
               <h3 className="text-sm font-bold text-slate-200 mb-3">Leia atentamente o termo que está sendo assinado:</h3>
               <div className="text-xs text-slate-400 space-y-3 leading-relaxed text-justify">
                 <p>
-                  Eu, <strong className="text-white">{alunoSelecionado?.nome_responsavel || '[Nome do Responsável]'}</strong>, portador(a) do CPF nº <strong className="text-white">{alunoSelecionado?.cpf_responsavel || '[CPF]'}</strong>, na qualidade de responsável legal pelo(a) menor <strong className="text-white">{alunoSelecionado?.nome_aluno || '[Nome do Aluno]'}</strong>, portador(a) do RG/CPF nº <strong className="text-white">{alunoSelecionado?.rg_cpf || '[RG/CPF do Aluno]'}</strong>, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: {INSTITUICAO.cnpj}).
+                  Eu, <strong className="text-white">{nomeResponsavel || '[Nome do Responsável]'}</strong>, portador(a) do CPF nº <strong className="text-white">{cpfResponsavel || '[CPF]'}</strong>, na qualidade de responsável legal pelo(a) menor <strong className="text-white">{alunoSelecionado?.nome_aluno || '[Nome do Aluno]'}</strong>, portador(a) do RG/CPF nº <strong className="text-white">{rgAluno || '[RG/CPF do Aluno]'}</strong>, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: {INSTITUICAO.cnpj}).
                 </p>
                 <p>
                   Declaro estar ciente de que as viagens têm finalidade estritamente esportiva e socioeducativa, e que o(a) atleta deverá seguir as regras de conduta e horários estipulados pela comissão técnica do projeto.
