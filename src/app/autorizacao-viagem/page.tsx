@@ -7,7 +7,31 @@ import { jsPDF } from 'jspdf';
 import { Check, AlertCircle, Loader2, Camera, Upload } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getLogoBase64 } from '@/lib/utils';
-import type { Aluno } from '@/types';
+
+interface AutorizacaoViagem {
+  id: string;
+  aluno_id: string;
+  pdf_url: string;
+  documento_foto_url: string;
+  created_at: string;
+}
+
+interface Aluno {
+  id: string;
+  codigo: string;
+  nome_aluno: string;
+  data_nascimento: string;
+  rg_cpf: string;
+  nome_responsavel: string;
+  cpf_responsavel: string;
+  telefone: string;
+  local: string;
+  assinatura: string;
+  pdf_url: string | null;
+  documentos_url: string | null;
+  created_at: string;
+  autorizacoes_viagem?: AutorizacaoViagem[];
+}
 
 const INSTITUICAO = {
   razaoSocial: 'Instituto Seed Esportes',
@@ -110,10 +134,10 @@ export default function AutorizacaoViagemPage() {
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'normal');
     
-    const nomeResp = aluno.nomeResponsavel || '_________________________';
-    const cpfResp = aluno.cpfResponsavel || '________________';
-    const nomeAluno = aluno.nomeAluno;
-    const rgAluno = aluno.rgCpf || '________________';
+    const nomeResp = aluno.nome_responsavel || '_________________________';
+    const cpfResp = aluno.cpf_responsavel || '________________';
+    const nomeAluno = aluno.nome_aluno;
+    const rgAluno = aluno.rg_cpf || '________________';
 
     const textoParagrafo1 = `Eu, ${nomeResp}, portador(a) do CPF nº ${cpfResp}, na qualidade de responsável legal pelo(a) menor ${nomeAluno}, portador(a) do RG/CPF nº ${rgAluno}, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: ${INSTITUICAO.cnpj}).`;
     
