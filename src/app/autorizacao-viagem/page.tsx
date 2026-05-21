@@ -386,11 +386,30 @@ export default function AutorizacaoViagemPage() {
             </div>
           </div>
 
-          {/* PASSO 3: Assinatura */}
+          {/* PASSO 3: Termos e Assinatura */}
           <div className={`card ${!alunoSelecionado && 'opacity-50 pointer-events-none'}`}>
-            <h2 className="text-lg font-semibold text-slate-100 mb-4">3. Assinatura do Responsável</h2>
-            <p className="text-sm text-slate-400 mb-4">
-              Ao assinar abaixo, você concorda expressamente com todos os termos da autorização, com validade de 1 (um) ano.
+            <h2 className="text-lg font-semibold text-slate-100 mb-4">3. Termos e Assinatura do Responsável</h2>
+            
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-6">
+              <h3 className="text-sm font-bold text-slate-200 mb-3">Leia atentamente o termo que está sendo assinado:</h3>
+              <div className="text-xs text-slate-400 space-y-3 leading-relaxed text-justify">
+                <p>
+                  Eu, <strong className="text-white">{alunoSelecionado?.nome_responsavel || '[Nome do Responsável]'}</strong>, portador(a) do CPF nº <strong className="text-white">{alunoSelecionado?.cpf_responsavel || '[CPF]'}</strong>, na qualidade de responsável legal pelo(a) menor <strong className="text-white">{alunoSelecionado?.nome_aluno || '[Nome do Aluno]'}</strong>, portador(a) do RG/CPF nº <strong className="text-white">{alunoSelecionado?.rg_cpf || '[RG/CPF do Aluno]'}</strong>, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: {INSTITUICAO.cnpj}).
+                </p>
+                <p>
+                  Declaro estar ciente de que as viagens têm finalidade estritamente esportiva e socioeducativa, e que o(a) atleta deverá seguir as regras de conduta e horários estipulados pela comissão técnica do projeto.
+                </p>
+                <p>
+                  Autorizo ainda que as decisões cabíveis em casos de emergência médica ou necessidade de atendimento de pronto-socorro durante as viagens sejam tomadas pelos responsáveis do projeto que estiverem acompanhando a delegação, comprometendo-me a ser informado(a) o mais breve possível através dos contatos fornecidos neste documento.
+                </p>
+                <p className="text-primary font-semibold pt-2">
+                  Validade: Esta autorização é válida para todas as competições e viagens realizadas no período de 1 (um) ano a contar da data de assinatura abaixo.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-400 mb-4 text-center">
+              Ao assinar no quadro abaixo, você concorda expressamente com todos os termos descritos acima.
             </p>
 
             <div className="mt-4">
