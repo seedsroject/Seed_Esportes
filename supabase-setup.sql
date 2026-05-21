@@ -40,7 +40,7 @@ DROP POLICY IF EXISTS "Allow public delete from termos" ON storage.objects;
 DROP BUCKET IF EXISTS termos;
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('termos', 'termos', true, 10485760, ARRAY['application/pdf', 'application/pdf;charset=UTF-8'])
+VALUES ('termos', 'termos', true, 10485760, ARRAY['application/pdf', 'application/pdf;charset=UTF-8', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'])
 ON CONFLICT (id) DO NOTHING;
 
 -- Políticas de storage mais permissivas
