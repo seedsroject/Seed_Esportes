@@ -52,6 +52,9 @@ export default function AutorizacaoViagemPage() {
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [busca, setBusca] = useState('');
   
+  const [isNovoAluno, setIsNovoAluno] = useState(false);
+  const [nomeNovoAluno, setNomeNovoAluno] = useState('');
+  
   const [nomeResponsavel, setNomeResponsavel] = useState('');
   const [cpfResponsavel, setCpfResponsavel] = useState('');
   const [rgAluno, setRgAluno] = useState('');
@@ -148,7 +151,7 @@ export default function AutorizacaoViagemPage() {
     
     const nomeResp = nomeResponsavel || '_________________________';
     const cpfResp = cpfResponsavel || '________________';
-    const nomeAluno = aluno.nome_aluno;
+    const nomeAluno = isNovoAluno ? nomeNovoAluno : aluno.nome_aluno;
     const rgAlunoFinal = rgAluno || '________________';
 
     const textoParagrafo1 = `Eu, ${nomeResp}, portador(a) do CPF nº ${cpfResp}, na qualidade de responsável legal pelo(a) menor ${nomeAluno}, portador(a) do RG/CPF nº ${rgAlunoFinal}, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: ${INSTITUICAO.cnpj}).`;
@@ -209,8 +212,12 @@ export default function AutorizacaoViagemPage() {
     e.preventDefault();
     setErro('');
 
-    if (!alunoSelecionado) {
-      setErro('Selecione um aluno.');
+    if (!alunoSelecionado && !isNovoAluno) {
+      setErro('Selecione um aluno ou adicione um novo.');
+      return;
+    }
+    if (isNovoAluno && !nomeNovoAluno.trim()) {
+      setErro('O nome do atleta é obrigatório para um novo cadastro.');
       return;
     }
     if (!documentoFile) {
@@ -224,8 +231,26 @@ export default function AutorizacaoViagemPage() {
 
     setLoading(true);
     try {
-      // 1. Upload do Documento do Pai
-      const docName = `doc_viagem_${alunoSelecionado.id}_${Date.now()}.${documentoFile.name.split('.').pop() || 'jpg'}`;
+      let currentAlunoId = alunoSelecionado?.id;
+      let currentAlunoCodigo = alunoSelecionado?.codigo || 'NOVO';
+
+      if (isNovoAluno) {
+        // Criar novo aluno
+        const { data: novoAlunoData, error: novoAlunoError } = await supabase.from('alunos').insert({
+          nome_aluno: nomeNovoAluno,
+          nome_responsavel: nomeResponsavel,
+          cpf_responsavel: cpfResponsavel,
+          rg_cpf: rgAluno
+        }).select().single();
+
+        if (novoAlunoError) throw novoAlunoError;
+        
+        currentAlunoId = novoAlunoData.id;
+        currentAlunoCodigo = novoAlunoData.id_inscricao ? String(novoAlunoData.id_inscricao).padStart(4, '0') : 'NOVO';
+      }
+
+      // 2. Upload do Documento do Pai
+      const docName = `doc_viagem_${currentAlunoId}_${Date.now()}.${documentoFile.name.split('.').pop() || 'jpg'}`;
       const { data: uploadDocData, error: uploadDocError } = await supabase.storage
         .from('termos')
         .upload(docName, documentoFile, { cacheControl: '3600', upsert: false });
@@ -235,10 +260,12 @@ export default function AutorizacaoViagemPage() {
       const { data: docUrlData } = supabase.storage.from('termos').getPublicUrl(uploadDocData.path);
       const documentoUrlFinal = docUrlData.publicUrl;
 
-      // 2. Geração e Upload do PDF
-      const pdf = await generatePDF(alunoSelecionado, documentoUrlFinal);
+      // 3. Geração e Upload do PDF
+      // Criamos um aluno fictício caso seja novo para gerar o PDF
+      const pdfAlunoData = isNovoAluno ? { nome_aluno: nomeNovoAluno } as Aluno : alunoSelecionado!;
+      const pdf = await generatePDF(pdfAlunoData, documentoUrlFinal);
       const pdfBlob = pdf.output('blob');
-      const pdfName = `viagem_${alunoSelecionado.codigo}_${Date.now()}.pdf`;
+      const pdfName = `viagem_${currentAlunoCodigo}_${Date.now()}.pdf`;
 
       const { data: uploadPdfData, error: uploadPdfError } = await supabase.storage
         .from('termos')
@@ -249,21 +276,23 @@ export default function AutorizacaoViagemPage() {
       const { data: pdfUrlData } = supabase.storage.from('termos').getPublicUrl(uploadPdfData.path);
       const pdfUrlFinal = pdfUrlData.publicUrl;
 
-      // 3. Salvar no Banco
+      // 4. Salvar Autorização no Banco
       const { error: insertError } = await supabase.from('autorizacoes_viagem').insert({
-        aluno_id: alunoSelecionado.id,
+        aluno_id: currentAlunoId,
         pdf_url: pdfUrlFinal,
         documento_foto_url: documentoUrlFinal,
       });
 
       if (insertError) throw insertError;
 
-      // 4. Atualizar os dados do aluno com as informações mais recentes do responsável
-      await supabase.from('alunos').update({
-        nome_responsavel: nomeResponsavel,
-        cpf_responsavel: cpfResponsavel,
-        rg_cpf: rgAluno
-      }).eq('id', alunoSelecionado.id);
+      if (!isNovoAluno) {
+        // Atualizar os dados do aluno existente com as informações mais recentes do responsável
+        await supabase.from('alunos').update({
+          nome_responsavel: nomeResponsavel,
+          cpf_responsavel: cpfResponsavel,
+          rg_cpf: rgAluno
+        }).eq('id', currentAlunoId);
+      }
 
       setSucesso(true);
     } catch (err) {
@@ -324,6 +353,72 @@ export default function AutorizacaoViagemPage() {
             {loadingAlunos ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : isNovoAluno ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-primary font-medium mb-1">Cadastrando Novo Atleta</p>
+                    <p className="text-xs text-slate-300">Preencha os dados do atleta e responsável.</p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsNovoAluno(false);
+                      setNomeNovoAluno('');
+                    }} 
+                    className="btn-secondary text-xs py-2 px-3 whitespace-nowrap ml-4"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+
+                <div className="bg-white/5 p-4 rounded-xl space-y-4 border border-white/10 mt-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Nome Completo do Aluno (Atleta)</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={nomeNovoAluno}
+                      onChange={e => setNomeNovoAluno(e.target.value)}
+                      required
+                      placeholder="Ex: Pedro da Silva"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Nome Completo do Responsável Legal</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={nomeResponsavel}
+                      onChange={e => setNomeResponsavel(e.target.value)}
+                      required
+                      placeholder="Ex: João da Silva"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">CPF do Responsável</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={cpfResponsavel}
+                      onChange={e => setCpfResponsavel(e.target.value)}
+                      required
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">RG ou CPF do Aluno</label>
+                    <input 
+                      type="text" 
+                      className="input-field w-full" 
+                      value={rgAluno}
+                      onChange={e => setRgAluno(e.target.value)}
+                      required
+                      placeholder="Apenas números ou formato padrão"
+                    />
+                  </div>
+                </div>
               </div>
             ) : alunoSelecionado ? (
               <div className="space-y-4">
@@ -395,22 +490,56 @@ export default function AutorizacaoViagemPage() {
                 
                 <div className="max-h-60 overflow-y-auto bg-white/5 rounded-xl border border-white/10 p-2 space-y-1">
                   {alunosFiltrados.length === 0 ? (
-                    <p className="text-sm text-slate-400 p-3 text-center">Nenhum aluno encontrado.</p>
-                  ) : (
-                    alunosFiltrados.slice(0, 50).map(aluno => (
-                      <div 
-                        key={aluno.id}
-                        onClick={() => setAlunoSelecionadoId(aluno.id)}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors border ${
-                          alunoSelecionadoId === aluno.id 
-                            ? 'bg-primary/20 border-primary/50' 
-                            : 'hover:bg-white/10 border-transparent'
-                        }`}
+                    <div className="p-4 text-center border-t border-white/10 mt-2">
+                      <p className="text-sm text-slate-400 mb-3">Não encontrou o atleta?</p>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setIsNovoAluno(true);
+                          setAlunoSelecionadoId('');
+                          setAlunoSelecionado(null);
+                          setNomeResponsavel('');
+                          setCpfResponsavel('');
+                          setRgAluno('');
+                        }}
+                        className="btn-primary text-xs py-2 px-4"
                       >
-                        <p className="text-slate-200 font-medium">{aluno.nome_aluno}</p>
-                        <p className="text-xs text-slate-400">Responsável: {aluno.nome_responsavel || 'Não informado'} | Cód: {aluno.codigo}</p>
+                        Adicionar Novo Atleta
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {alunosFiltrados.slice(0, 50).map(aluno => (
+                        <div 
+                          key={aluno.id}
+                          onClick={() => setAlunoSelecionadoId(aluno.id)}
+                          className={`p-3 rounded-lg cursor-pointer transition-colors border ${
+                            alunoSelecionadoId === aluno.id 
+                              ? 'bg-primary/20 border-primary/50' 
+                              : 'hover:bg-white/10 border-transparent'
+                          }`}
+                        >
+                          <p className="text-slate-200 font-medium">{aluno.nome_aluno}</p>
+                          <p className="text-xs text-slate-400">Responsável: {aluno.nome_responsavel || 'Não informado'} | Cód: {aluno.codigo}</p>
+                        </div>
+                      ))}
+                      <div className="p-3 text-center border-t border-white/10 mt-1">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setIsNovoAluno(true);
+                            setAlunoSelecionadoId('');
+                            setAlunoSelecionado(null);
+                            setNomeResponsavel('');
+                            setCpfResponsavel('');
+                            setRgAluno('');
+                          }}
+                          className="text-primary text-sm font-medium hover:underline"
+                        >
+                          + Adicionar Novo Atleta
+                        </button>
                       </div>
-                    ))
+                    </>
                   )}
                 </div>
               </div>
@@ -418,7 +547,7 @@ export default function AutorizacaoViagemPage() {
           </div>
 
           {/* PASSO 2: Foto do Documento */}
-          <div className={`card ${!alunoSelecionado && 'opacity-50 pointer-events-none'}`}>
+          <div className={`card ${(!alunoSelecionado && !isNovoAluno) && 'opacity-50 pointer-events-none'}`}>
             <h2 className="text-lg font-semibold text-slate-100 mb-4">2. Documento do Responsável</h2>
             <p className="text-sm text-slate-400 mb-4">
               Por favor, anexe ou tire uma foto do seu documento de identidade (RG ou CNH).
@@ -457,14 +586,14 @@ export default function AutorizacaoViagemPage() {
           </div>
 
           {/* PASSO 3: Termos e Assinatura */}
-          <div className={`card ${!alunoSelecionado && 'opacity-50 pointer-events-none'}`}>
+          <div className={`card ${(!alunoSelecionado && !isNovoAluno) && 'opacity-50 pointer-events-none'}`}>
             <h2 className="text-lg font-semibold text-slate-100 mb-4">3. Termos e Assinatura do Responsável</h2>
             
             <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-6">
               <h3 className="text-sm font-bold text-slate-200 mb-3">Leia atentamente o termo que está sendo assinado:</h3>
               <div className="text-xs text-slate-400 space-y-3 leading-relaxed text-justify">
                 <p>
-                  Eu, <strong className="text-white">{nomeResponsavel || '[Nome do Responsável]'}</strong>, portador(a) do CPF nº <strong className="text-white">{cpfResponsavel || '[CPF]'}</strong>, na qualidade de responsável legal pelo(a) menor <strong className="text-white">{alunoSelecionado?.nome_aluno || '[Nome do Aluno]'}</strong>, portador(a) do RG/CPF nº <strong className="text-white">{rgAluno || '[RG/CPF do Aluno]'}</strong>, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: {INSTITUICAO.cnpj}).
+                  Eu, <strong className="text-white">{nomeResponsavel || '[Nome do Responsável]'}</strong>, portador(a) do CPF nº <strong className="text-white">{cpfResponsavel || '[CPF]'}</strong>, na qualidade de responsável legal pelo(a) menor <strong className="text-white">{isNovoAluno ? nomeNovoAluno : (alunoSelecionado?.nome_aluno || '[Nome do Aluno]')}</strong>, portador(a) do RG/CPF nº <strong className="text-white">{rgAluno || '[RG/CPF do Aluno]'}</strong>, AUTORIZO EXPRESSAMENTE a sua viagem para participação em qualquer competição esportiva, em qualquer localidade, sob a responsabilidade dos professores, treinadores ou monitores do INSTITUTO SEED ESPORTES (CNPJ: {INSTITUICAO.cnpj}).
                 </p>
                 <p>
                   Declaro estar ciente de que as viagens têm finalidade estritamente esportiva e socioeducativa, e que o(a) atleta deverá seguir as regras de conduta e horários estipulados pela comissão técnica do projeto.
@@ -498,7 +627,7 @@ export default function AutorizacaoViagemPage() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading || !alunoSelecionado} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg">
+          <button type="submit" disabled={loading || (!alunoSelecionado && !isNovoAluno)} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg">
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
