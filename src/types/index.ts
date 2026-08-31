@@ -24,16 +24,68 @@ export interface AutorizacaoViagem {
 
 export interface Aluno {
   id: string;
-  codigo: string;
-  nomeAluno: string;
-  dataNascimento: string;
-  rgCpf: string;
-  nomeResponsavel: string;
-  cpfResponsavel: string;
-  telefone: string;
-  local: string;
-  assinatura: string;
+  id_inscricao?: number;
+  codigo?: string;
+  nome_aluno: string;
+  nomeAluno?: string;
+  data_nascimento?: string;
+  dataNascimento?: string;
+  rg_cpf?: string;
+  rgCpf?: string;
+  nome_responsavel?: string;
+  nomeResponsavel?: string;
+  cpf_responsavel?: string;
+  cpfResponsavel?: string;
+  telefone?: string;
+  local?: string;
+  assinatura?: string;
+  pdf_url?: string | null;
   pdfUrl?: string;
-  createdAt: string;
+  documentos_url?: string | null;
+  created_at?: string;
+  createdAt?: string;
   autorizacoes_viagem?: AutorizacaoViagem[];
+}
+
+export interface Turma {
+  id: string;
+  nome_turma: string;
+  modalidade: string;
+  dias_semana: string[];
+  horario_inicio: string;
+  horario_fim: string;
+  local?: string;
+  professor?: string;
+  limite_vagas: number;
+  created_at: string;
+  turma_alunos?: TurmaAluno[];
+  alunos_count?: number;
+}
+
+export interface TurmaAluno {
+  id: string;
+  turma_id: string;
+  aluno_id: string;
+  created_at: string;
+  aluno?: Aluno;
+}
+
+export interface Chamada {
+  id: string;
+  turma_id: string;
+  data: string;
+  observacao?: string;
+  created_at: string;
+  presencas?: Presenca[];
+}
+
+export interface Presenca {
+  id: string;
+  chamada_id: string;
+  aluno_id: string;
+  status: 'presente' | 'ausente' | 'justificado';
+  atestado_url?: string | null;
+  observacao_justificativa?: string | null;
+  created_at: string;
+  aluno?: Aluno;
 }
