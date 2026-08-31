@@ -697,14 +697,14 @@ export default function AdminPage() {
                 return (
                   <div 
                     key={aluno.id}
-                    className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                    className={`p-3 sm:p-4 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
                       isMatriculado 
                         ? 'bg-primary/15 border-primary/40' 
                         : 'bg-white/5 border-white/5 hover:border-white/20'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isMatriculado ? 'bg-primary text-white' : 'bg-white/10 text-slate-400'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isMatriculado ? 'bg-primary text-white' : 'bg-white/10 text-slate-400'}`}>
                         <User className="w-5 h-5" />
                       </div>
                       <div>
@@ -715,7 +715,7 @@ export default function AdminPage() {
 
                     <button
                       onClick={() => handleToggleAlunoTurma(modalEnturmacao.id, aluno.id)}
-                      className={`btn-secondary text-xs px-4 py-2 flex items-center gap-2 ${
+                      className={`w-full sm:w-auto btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-2 ${
                         isMatriculado 
                           ? 'border-red-500/40 text-red-400 hover:bg-red-500/10' 
                           : 'border-primary/40 text-primary hover:bg-primary/10'
@@ -823,10 +823,10 @@ export default function AdminPage() {
 
       {/* --- HEADER PRINCIPAL COM NAVEGAÇÃO POR ABAS --- */}
       <header className="bg-slate-950/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 shadow-xl">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Logo"
@@ -836,13 +836,13 @@ export default function AdminPage() {
               </div>
               <div>
                 <p className="text-slate-400 font-medium tracking-widest uppercase text-[10px]">Painel Administrativo</p>
-                <h1 className="text-lg font-bold text-white">Seed Esportes</h1>
+                <h1 className="text-base sm:text-lg font-bold text-white">Seed Esportes</h1>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button onClick={() => setModalLinkAberto(true)} className="btn-primary flex items-center gap-2 py-2 px-4 text-xs">
-                <Copy className="w-4 h-4" /> <span className="hidden sm:inline">Links</span>
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+              <button onClick={() => setModalLinkAberto(true)} className="btn-primary flex items-center gap-1.5 sm:gap-2 py-2 px-3 sm:px-4 text-xs">
+                <Copy className="w-4 h-4" /> <span>Links</span>
               </button>
               <button onClick={fetchAllData} className="btn-secondary p-2" title="Atualizar dados">
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -854,10 +854,10 @@ export default function AdminPage() {
           </div>
 
           {/* BARRA DE NAVEGAÇÃO DE ABAS */}
-          <nav className="flex items-center gap-2 overflow-x-auto border-t border-white/10 pt-3">
+          <nav className="flex items-center gap-2 overflow-x-auto border-t border-white/10 pt-3 no-scrollbar pb-1">
             <button
               onClick={() => setActiveTab('inscricoes')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
+              className={`flex-shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
                 activeTab === 'inscricoes'
                   ? 'bg-primary text-white shadow-lg shadow-primary/30'
                   : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
@@ -869,7 +869,7 @@ export default function AdminPage() {
 
             <button
               onClick={() => setActiveTab('turmas')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
+              className={`flex-shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
                 activeTab === 'turmas'
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                   : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
@@ -881,7 +881,7 @@ export default function AdminPage() {
 
             <button
               onClick={() => setActiveTab('chamada')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
+              className={`flex-shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
                 activeTab === 'chamada'
                   ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
                   : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
@@ -893,7 +893,7 @@ export default function AdminPage() {
 
             <button
               onClick={() => setActiveTab('relatorios')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
+              className={`flex-shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-2xl font-bold text-xs transition-all ${
                 activeTab === 'relatorios'
                   ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
                   : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
@@ -907,7 +907,7 @@ export default function AdminPage() {
       </header>
 
       {/* --- CONTEÚDO PRINCIPAL (MUDANÇA DE ABA) --- */}
-      <main className="max-w-7xl mx-auto px-6 py-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10">
 
         {/* 1. ABA DE INSCRIÇÕES / ALUNOS */}
         {activeTab === 'inscricoes' && (
@@ -1188,7 +1188,7 @@ export default function AdminPage() {
                         </div>
 
                         {/* BOTÕES DE STATUS PRESENÇA */}
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
                           <button
                             type="button"
                             onClick={() => {
@@ -1197,13 +1197,13 @@ export default function AdminPage() {
                                 [aluno.id]: { ...prev[aluno.id], status: 'presente' }
                               }));
                             }}
-                            className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            className={`px-1.5 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center ${
                               currentStatus === 'presente'
                                 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
                                 : 'bg-white/5 text-slate-400 hover:text-white'
                             }`}
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Presente
+                            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> <span>Presente</span>
                           </button>
 
                           <button
@@ -1214,13 +1214,13 @@ export default function AdminPage() {
                                 [aluno.id]: { ...prev[aluno.id], status: 'ausente' }
                               }));
                             }}
-                            className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            className={`px-1.5 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center ${
                               currentStatus === 'ausente'
                                 ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
                                 : 'bg-white/5 text-slate-400 hover:text-white'
                             }`}
                           >
-                            <XCircle className="w-3.5 h-3.5" /> Ausente
+                            <XCircle className="w-3.5 h-3.5 flex-shrink-0" /> <span>Ausente</span>
                           </button>
 
                           <button
@@ -1232,23 +1232,23 @@ export default function AdminPage() {
                               }));
                               setModalAtestadoAlunoId(aluno.id);
                             }}
-                            className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            className={`px-1.5 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center ${
                               currentStatus === 'justificado'
                                 ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
                                 : 'bg-white/5 text-slate-400 hover:text-white'
                             }`}
                           >
-                            <AlertCircle className="w-3.5 h-3.5" /> Justificado
+                            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> <span className="truncate">Justific.</span>
                           </button>
 
                           {currentStatus === 'justificado' && (
                             <button
                               type="button"
                               onClick={() => setModalAtestadoAlunoId(aluno.id)}
-                              className={`p-2 rounded-xl border text-xs ${hasAtestado ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/50 text-amber-400 bg-amber-500/10'}`}
+                              className={`col-span-3 sm:col-span-1 p-2 rounded-xl border text-xs flex items-center justify-center gap-1 ${hasAtestado ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/50 text-amber-400 bg-amber-500/10'}`}
                               title="Anexar ou ver atestado"
                             >
-                              <Paperclip className="w-4 h-4" />
+                              <Paperclip className="w-4 h-4" /> <span className="sm:hidden text-[10px]">Anexar Atestado</span>
                             </button>
                           )}
                         </div>

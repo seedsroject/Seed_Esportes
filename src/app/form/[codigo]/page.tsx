@@ -446,13 +446,13 @@ export default function FormPage() {
                   }}
                 />
               </div>
-              <button type="button" onClick={clearSignature} className="btn-secondary mt-3 text-sm">
+              <button type="button" onClick={clearSignature} className="w-full sm:w-auto btn-secondary mt-3 text-xs sm:text-sm py-2 px-4">
                 Limpar Assinatura
               </button>
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-base sm:text-lg">
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />

@@ -356,9 +356,9 @@ export default function AutorizacaoViagemPage() {
               </div>
             ) : isNovoAluno ? (
               <div className="space-y-4">
-                <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl flex justify-between items-center">
+                <div className="p-3 sm:p-4 bg-primary/10 border border-primary/20 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
-                    <p className="text-sm text-primary font-medium mb-1">Cadastrando Novo Atleta</p>
+                    <p className="text-sm text-primary font-medium mb-0.5">Cadastrando Novo Atleta</p>
                     <p className="text-xs text-slate-300">Preencha os dados do atleta e responsável.</p>
                   </div>
                   <button 
@@ -367,7 +367,7 @@ export default function AutorizacaoViagemPage() {
                       setIsNovoAluno(false);
                       setNomeNovoAluno('');
                     }} 
-                    className="btn-secondary text-xs py-2 px-3 whitespace-nowrap ml-4"
+                    className="w-full sm:w-auto btn-secondary text-xs py-2 px-3"
                   >
                     Cancelar
                   </button>
@@ -422,11 +422,11 @@ export default function AutorizacaoViagemPage() {
               </div>
             ) : alunoSelecionado ? (
               <div className="space-y-4">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex justify-between items-center">
+                <div className="p-3 sm:p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
-                    <p className="text-sm text-emerald-400 font-medium mb-1">Aluno selecionado:</p>
-                    <p className="text-lg text-white font-bold">{alunoSelecionado.nome_aluno}</p>
-                    <p className="text-xs text-slate-300 mt-1">Cód: {alunoSelecionado.codigo}</p>
+                    <p className="text-sm text-emerald-400 font-medium mb-0.5">Aluno selecionado:</p>
+                    <p className="text-base sm:text-lg text-white font-bold">{alunoSelecionado.nome_aluno}</p>
+                    <p className="text-xs text-slate-300 mt-0.5">Cód: {alunoSelecionado.codigo}</p>
                   </div>
                   <button 
                     type="button" 
@@ -434,7 +434,7 @@ export default function AutorizacaoViagemPage() {
                       setAlunoSelecionadoId('');
                       setBusca('');
                     }} 
-                    className="btn-secondary text-xs py-2 px-3 whitespace-nowrap ml-4"
+                    className="w-full sm:w-auto btn-secondary text-xs py-2 px-3"
                   >
                     Trocar Aluno
                   </button>

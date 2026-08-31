@@ -5,18 +5,24 @@ import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistratio
 export const metadata: Metadata = {
   title: 'Seed - Autorizações Esportivas',
   description: 'Gestão Inteligente de Termos e Autorizações',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Seed Termos',
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#7c3aed',
+  themeColor: '#020617',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

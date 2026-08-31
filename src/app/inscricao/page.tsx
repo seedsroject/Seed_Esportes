@@ -461,9 +461,9 @@ export default function InscricaoPage() {
                         id="documento"
                       />
                       {docNome ? (
-                        <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/10">
-                          <span className="text-sm text-slate-300 truncate">{docNome}</span>
-                          <button type="button" onClick={handleRemoveFile} className="text-red-400 hover:text-red-300 transition-colors">
+                        <div className="flex items-center justify-between bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10 gap-2">
+                          <span className="text-sm text-slate-300 truncate max-w-[200px] sm:max-w-xs">{docNome}</span>
+                          <button type="button" onClick={handleRemoveFile} className="text-red-400 hover:text-red-300 transition-colors p-1 flex-shrink-0">
                             <X className="w-5 h-5" />
                           </button>
                         </div>
@@ -597,13 +597,13 @@ export default function InscricaoPage() {
                   }}
                 />
               </div>
-              <button type="button" onClick={clearSignature} className="btn-secondary mt-3 text-sm">
+              <button type="button" onClick={clearSignature} className="w-full sm:w-auto btn-secondary mt-3 text-xs sm:text-sm py-2 px-4">
                 Limpar Assinatura
               </button>
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-base sm:text-lg">
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
