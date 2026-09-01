@@ -53,15 +53,16 @@ export default function LoginPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
 
       <div className="max-w-md w-full relative z-10">
-        <div className="text-center mb-10">
-          <div className="relative w-40 h-40 mx-auto mb-2 animate-float">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 mx-auto mb-1 animate-float">
             <Image
-              src="/logo.png?v=3"
+              src="/logo.png?v=4"
               alt="Logo"
               fill
-              className="object-contain drop-shadow-[0_0_25px_rgba(124,58,237,0.3)]"
+              className="object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] drop-shadow-[0_0_25px_rgba(124,58,237,0.45)]"
             />
           </div>
+          <div className="w-20 h-2 bg-black/80 blur-md rounded-full mb-3" />
           <p className="text-slate-400 font-medium tracking-wide uppercase text-xs">Acesso Administrativo</p>
         </div>
 

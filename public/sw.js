@@ -1,5 +1,5 @@
 // Service Worker with Cache Clearing for Seed Termos
-const CACHE_NAME = 'seed-termos-v3';
+const CACHE_NAME = 'seed-termos-v4';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

@@ -6,9 +6,9 @@ export const metadata: Metadata = {
   title: 'Seed - Autorizações Esportivas',
   description: 'Gestão Inteligente de Termos e Autorizações',
   icons: {
-    icon: '/logo.png?v=3',
-    shortcut: '/logo.png?v=3',
-    apple: '/logo.png?v=3',
+    icon: '/icon-192.png?v=4',
+    shortcut: '/icon-192.png?v=4',
+    apple: '/icon-512.png?v=4',
   },
   appleWebApp: {
     capable: true,
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#020617',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
