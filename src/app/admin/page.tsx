@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getAdminSession, logoutAdmin } from '@/lib/auth';
+import { getLogoBase64 } from '@/lib/utils';
 import { Aluno, Turma, Chamada, Presenca } from '@/types';
 
 type ActiveTab = 'inscricoes' | 'turmas' | 'chamada' | 'relatorios';
@@ -158,6 +159,127 @@ export default function AdminPage() {
       setTimeout(() => setLinkCopiado(false), 3000);
     } catch {
       setLinkCopiado(false);
+    }
+  };
+
+  const [regerandoPDF, setRegerandoPDF] = useState(false);
+  const handleRegerarPDF = async (aluno: Aluno) => {
+    setRegerandoPDF(true);
+    try {
+      const jsPDF = (await import('jspdf')).jsPDF;
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const centerX = pageWidth / 2;
+      const primaryColor: [number, number, number] = [124, 58, 237];
+
+      const logoBase64 = await getLogoBase64();
+      if (logoBase64) {
+        pdf.addImage(logoBase64, 'PNG', centerX - 25, 10, 50, 48.3);
+      }
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('INSTITUTO SEED ESPORTES', centerX, 65, { align: 'center' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('CNPJ: 64.013.507/0001-62', centerX, 70, { align: 'center' });
+
+      pdf.setDrawColor(...primaryColor);
+      pdf.setLineWidth(1);
+      pdf.line(15, 75, pageWidth - 15, 75);
+
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Termo de Autorização para Atividade Física e', centerX, 85, { align: 'center' });
+      pdf.text('Cessão de Direitos de Imagem, Vídeo e Áudio', centerX, 93, { align: 'center' });
+
+      pdf.setDrawColor(...primaryColor);
+      pdf.setLineWidth(0.5);
+      pdf.line(15, 103, 40, 103);
+      
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('1. DADOS DO ALUNO(A)', 15, 110);
+      
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Nome: ${aluno.nome_aluno}`, 15, 120);
+      pdf.text(`Data de Nascimento: ${aluno.data_nascimento || 'Não informada'}`, 15, 127);
+      pdf.text(`RG/CPF: ${aluno.rg_cpf || 'Não informado'}`, 15, 134);
+      if (aluno.telefone) {
+        pdf.text(`Telefone: ${aluno.telefone}`, 15, 141);
+      }
+
+      let currentY = 150;
+      if (aluno.nome_responsavel) {
+        pdf.setDrawColor(...primaryColor);
+        pdf.line(15, 145, 40, 145);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('2. DADOS DO RESPONSÁVEL', 15, 152);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Nome: ${aluno.nome_responsavel}`, 15, 160);
+        pdf.text(`CPF: ${aluno.cpf_responsavel || 'Não informado'}`, 15, 167);
+        currentY = 175;
+      }
+
+      pdf.setDrawColor(...primaryColor);
+      pdf.line(15, currentY, 40, currentY);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('3. AUTORIZAÇÃO PARA PRÁTICA DE ATIVIDADE FÍSICA', 15, currentY + 7);
+      pdf.setFont('helvetica', 'normal');
+      const textFisica = pdf.splitTextToSize(
+        'AUTORIZO a participação do aluno nas atividades físicas, esportivas e recreativas promovidas pelo Instituto Seed Esportes. Declaro que o aluno goza de plena saúde física e mental.',
+        pageWidth - 30
+      );
+      pdf.text(textFisica, 15, currentY + 15);
+
+      currentY += 35;
+      pdf.setDrawColor(...primaryColor);
+      pdf.line(15, currentY, 40, currentY);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('4. AUTORIZAÇÃO DE USO DE IMAGEM, VÍDEO E ÁUDIO', 15, currentY + 7);
+      pdf.setFont('helvetica', 'normal');
+      const textImagem = pdf.splitTextToSize(
+        'AUTORIZO livremente o Instituto Seed Esportes a utilizar a imagem, voz e depoimentos do aluno(a) captados durante as atividades para divulgação institucional, materiais publicitários e registros históricos. Esta autorização é gratuita, irrevogável e permanente.',
+        pageWidth - 30
+      );
+      pdf.text(textImagem, 15, currentY + 15);
+
+      if (aluno.assinatura) {
+        pdf.addImage(aluno.assinatura, 'PNG', centerX - 30, currentY + 40, 60, 25);
+      }
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('_________________________________', centerX, currentY + 75, { align: 'center' });
+      
+      pdf.setFontSize(9);
+      pdf.text(`Local: ${aluno.local || 'Nova Iguaçu - RJ'}`, centerX, currentY + 85, { align: 'center' });
+      pdf.text(`Data: ${formatDate(aluno.created_at)}`, centerX, currentY + 92, { align: 'center' });
+
+      const pdfBlob = pdf.output('blob');
+      const pdfName = `termo_seed_${aluno.id}_${Date.now()}.pdf`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('termos')
+        .upload(pdfName, pdfBlob, { contentType: 'application/pdf' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('termos').getPublicUrl(uploadData.path);
+      const newPdfUrl = urlData.publicUrl;
+
+      await supabase.from('alunos').update({ pdf_url: newPdfUrl }).eq('id', aluno.id);
+
+      const updatedAluno = { ...aluno, pdf_url: newPdfUrl };
+      setAlunoSelecionado(updatedAluno);
+      setAlunos(alunos.map(a => a.id === aluno.id ? updatedAluno : a));
+      alert('PDF do termo regerado com a nova logo com sucesso!');
+    } catch (err) {
+      console.error('Erro ao regerar PDF:', err);
+      alert('Erro ao regerar o PDF do termo.');
+    } finally {
+      setRegerandoPDF(false);
     }
   };
 
@@ -529,6 +651,14 @@ export default function AdminPage() {
                     <FileText className="w-4 h-4 text-primary" /> Visualizar Termo (PDF)
                   </a>
                 )}
+                <button
+                  onClick={() => handleRegerarPDF(alunoSelecionado)}
+                  disabled={regerandoPDF}
+                  className="btn-primary text-xs flex items-center justify-center gap-2 py-3"
+                >
+                  <RefreshCw className={`w-4 h-4 ${regerandoPDF ? 'animate-spin' : ''}`} />
+                  {regerandoPDF ? 'Regerando PDF...' : 'Regerar PDF (Nova Logo)'}
+                </button>
                 {alunoSelecionado.documentos_url && (
                   <a href={alunoSelecionado.documentos_url} target="_blank" rel="noreferrer" className="btn-secondary text-xs flex items-center justify-center gap-2 py-3">
                     <Paperclip className="w-4 h-4 text-emerald-400" /> Documento de Identificação
