@@ -333,7 +333,7 @@ export default function AutorizacaoViagemPage() {
       <div className="max-w-3xl mx-auto relative z-10">
         <div className="text-center mb-10">
           <div className="relative w-32 h-32 mx-auto mb-2">
-            <Image src="/logo.png" alt="Logo" fill className="object-contain drop-shadow-[0_0_15px_rgba(124,58,237,0.2)]" />
+            <Image src="/logo.png?v=3" alt="Logo" fill className="object-contain drop-shadow-[0_0_15px_rgba(124,58,237,0.2)]" />
           </div>
           <h1 className="text-2xl font-bold text-white mt-4">Autorização de Viagem</h1>
           <p className="text-slate-400 text-sm mt-1">Preencha os dados abaixo para autorizar o menor a viajar para competições.</p>

@@ -56,7 +56,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <div className="relative w-40 h-40 mx-auto mb-2 animate-float">
             <Image
-              src="/logo.png"
+              src="/logo.png?v=3"
               alt="Logo"
               fill
               className="object-contain drop-shadow-[0_0_25px_rgba(124,58,237,0.3)]"

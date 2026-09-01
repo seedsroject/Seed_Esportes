@@ -256,7 +256,7 @@ export default function FormPage() {
         <div className="text-center mb-10">
           <div className="relative w-32 h-32 mx-auto mb-2">
             <Image
-              src="/logo.png"
+              src="/logo.png?v=3"
               alt="Logo"
               fill
               className="object-contain drop-shadow-[0_0_15px_rgba(124,58,237,0.2)]"

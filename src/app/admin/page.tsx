@@ -828,7 +828,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                 <Image
-                  src="/logo.png"
+                  src="/logo.png?v=3"
                   alt="Logo"
                   fill
                   className="object-contain drop-shadow-[0_0_15px_rgba(124,58,237,0.3)]"

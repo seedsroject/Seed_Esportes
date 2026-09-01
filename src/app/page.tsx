@@ -26,7 +26,7 @@ export default function Home() {
       <div className="text-center relative z-10">
         <div className="relative w-36 h-36 mx-auto mb-4 animate-float">
           <Image
-            src="/logo.png"
+            src="/logo.png?v=3"
             alt="Instituto Seed Esportes"
             fill
             className="object-contain drop-shadow-[0_0_25px_rgba(124,58,237,0.3)]"
