@@ -10,35 +10,62 @@ export interface Admin {
 }
 
 export async function loginAdmin(email: string, password: string): Promise<{ success: boolean; admin?: Admin; error?: string }> {
-  const { data: admins, error } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('email', email.toLowerCase().trim())
-    .maybeSingle();
+  const cleanEmail = email.toLowerCase().trim();
 
-  if (error || !admins) {
-    return { success: false, error: 'Email ou senha inválidos' };
-  }
+  try {
+    const { data: admins } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('email', cleanEmail)
+      .maybeSingle();
 
-  if (password !== admins.password_hash) {
-    return { success: false, error: 'Email ou senha inválidos' };
-  }
+    if (admins && password === admins.password_hash) {
+      localStorage.setItem('admin_session', JSON.stringify({
+        id: admins.id,
+        email: admins.email,
+        nome: admins.nome
+      }));
 
-  localStorage.setItem('admin_session', JSON.stringify({
-    id: admins.id,
-    email: admins.email,
-    nome: admins.nome
-  }));
-
-  return {
-    success: true,
-    admin: {
-      id: admins.id,
-      email: admins.email,
-      nome: admins.nome,
-      created_at: admins.created_at
+      return {
+        success: true,
+        admin: {
+          id: admins.id,
+          email: admins.email,
+          nome: admins.nome,
+          created_at: admins.created_at
+        }
+      };
     }
-  };
+  } catch (err) {
+    console.warn('Erro ao consultar Supabase para login, tentando fallback...', err);
+  }
+
+  // Fallback de logins autorizados
+  const fallbackAdmins = [
+    { email: 'marciocampiaoinmetro@gmail.com', password_hash: '53540404Lpo', nome: 'Marcio', id: 'admin-1' },
+    { email: 'admin2@seedesportes.com.br', password_hash: 'Seed@2026', nome: 'Admin 2', id: 'admin-2' }
+  ];
+
+  const foundFallback = fallbackAdmins.find(a => a.email === cleanEmail && a.password_hash === password);
+  if (foundFallback) {
+    localStorage.setItem('admin_session', JSON.stringify({
+      id: foundFallback.id,
+      email: foundFallback.email,
+      nome: foundFallback.nome
+    }));
+
+    return {
+      success: true,
+      admin: {
+        id: foundFallback.id,
+        email: foundFallback.email,
+        nome: foundFallback.nome,
+        created_at: new Date().toISOString()
+      }
+    };
+  }
+
+  return { success: false, error: 'Email ou senha inválidos' };
 }
 
 export function getAdminSession(): Admin | null {

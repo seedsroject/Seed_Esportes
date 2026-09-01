@@ -72,9 +72,11 @@ CREATE TABLE IF NOT EXISTS public.admins (
 DROP POLICY IF EXISTS "Allow public read admins" ON public.admins;
 CREATE POLICY "Allow public read admins" ON public.admins FOR SELECT USING (true);
 
--- 4. Inserir admin
+-- 4. Inserir admins
 INSERT INTO public.admins (email, password_hash, nome) 
-VALUES ('marciocampiaoinmetro@gmail.com', '53540404Lpo', 'Marcio')
+VALUES 
+    ('marciocampiaoinmetro@gmail.com', '53540404Lpo', 'Marcio'),
+    ('admin2@seedesportes.com.br', 'Seed@2026', 'Admin 2')
 ON CONFLICT (email) DO NOTHING;
 
 -- 5. Criar tabela de autorizações de viagem
